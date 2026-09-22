@@ -1,0 +1,35 @@
+
+services:
+  db:
+    image: postgres:${POSTGRES_VERSION}
+    container_name: ${DB_CONTAINER_NAME}
+    restart: always
+    ports:
+      - "5439:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_helpdesk_db_datas:/var/lib/postgresql/data
+
+  odoo:
+    user: root
+    image: odoo:${ODOO_VERSION}
+    container_name: ${ODOO_CONTAINER_NAME}
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - ${ODOO_PORT}:8069
+    volumes:
+      - odoo_helpdesk_web_datas:/var/lib/odoo
+      - ${CONFIG_PATH}:/etc/odoo/
+      - ${ADDONS_PATH}:/mnt/extra-addons
+      - ${ENTREPRISE_PATH}:/mnt/entreprise-addons
+      - ./requirements.txt:/mnt/requirements.txt:ro
+    command: odoo -c /etc/odoo/odoo.conf --dev xml,qweb
+
+volumes:
+  odoo_helpdesk_web_datas:
+  postgres_helpdesk_db_datas:
