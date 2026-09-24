@@ -11,6 +11,7 @@ __pycache__/
 
 # IDE
 .vscode/
+helpdesk.code-workspace
 
 # OS
 .DS_Store

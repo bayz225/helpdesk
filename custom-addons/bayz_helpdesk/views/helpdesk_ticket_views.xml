@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- =====================================================
+             VUE LISTE
+             ===================================================== -->
+
+        <record id="view_helpdesk_ticket_list" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.list</field>
+            <field name="model">helpdesk.ticket</field>
+
+            <field name="arch" type="xml">
+                <list
+                    decoration-muted="state == 'cancelled'"
+                    decoration-success="state == 'resolved'">
+
+                    <field name="name"/>
+                    <field name="requester_id"/>
+                    <field name="technician_id"/>
+                    <field name="priority" widget="badge"/>
+
+                    <field
+                        name="state"
+                        widget="badge"
+                        decoration-info="state == 'in_progress'"
+                        decoration-warning="state == 'pending'"
+                    />
+
+                    <field name="deadline"/>
+                    <field name="total_time" widget="float_time" sum="Total heures"/>
+                </list>
+            </field>
+        </record>
+
+
+        <!-- =====================================================
+             VUE FORMULAIRE
+             ===================================================== -->
+
+        <record id="view_helpdesk_ticket_form" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.form</field>
+            <field name="model">helpdesk.ticket</field>
+
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button
+                            name="action_assign"
+                            string="Assigner"
+                            type="object"
+                            invisible="state not in ['new', 'reopened']"
+                        />
+                        <button
+                            name="action_start"
+                            string="Démarrer"
+                            type="object"
+                            invisible="state != 'assigned'"
+                        />
+                        <button
+                            name="action_pending"
+                            string="Mettre en attente"
+                            type="object"
+                            invisible="state != 'in_progress'"
+                        />
+                        <button
+                            name="action_resume"
+                            string="Reprendre"
+                            type="object"
+                            invisible="state != 'pending'"
+                        />
+                        <button
+                            name="action_resolve"
+                            string="Résoudre"
+                            type="object"
+                            invisible="state not in ['in_progress', 'pending']"
+                        />
+                        <button
+                            name="action_close"
+                            string="Fermer"
+                            type="object"
+                            invisible="state != 'resolved'"
+                        />
+                        <button
+                            name="action_reopen"
+                            string="Rouvrir"
+                            type="object"
+                            invisible="state not in ['resolved', 'closed']"
+                        />
+                        <button
+                            name="action_cancel"
+                            string="Annuler"
+                            type="object"
+                            invisible="state not in ['new', 'assigned']"
+                        />
+
+                        <field
+                            name="state"
+                            widget="statusbar"
+                            statusbar_visible="new,assigned,in_progress,pending,resolved,closed,reopened,cancelled"
+                        />
+                    </header>
+
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field
+                                    name="name"
+                                    placeholder="Titre du ticket..."
+                                    readonly="state in ['closed', 'cancelled']"
+                                />
+                            </h1>
+                        </div>
+
+                        <!-- Champ technique utilisé pour le domaine du technicien -->
+                        <field
+                            name="technician_domain_ids"
+                            invisible="1"
+                        />
+
+                        <group>
+                            <group>
+                                <field
+                                    name="requester_id"
+                                    readonly="state in ['closed', 'cancelled']"
+                                />
+
+                                <field
+                                    name="technician_id"
+                                    domain="[('id', 'in', technician_domain_ids)]"
+                                    readonly="state in ['closed', 'cancelled']"
+                                />
+
+                                <field
+                                    name="category_id"
+                                    readonly="state in ['closed', 'cancelled']"
+                                />
+                            </group>
+
+                            <group>
+                                <field
+                                    name="priority"
+                                    widget="priority"
+                                    readonly="state in ['closed', 'cancelled']"
+                                />
+
+                                <field
+                                    name="deadline"
+                                    readonly="1"
+                                />
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page
+                                string="Description"
+                                name="description"
+                            >
+                                <field
+                                    name="description"
+                                    readonly="state in ['closed', 'cancelled']"
+                                />
+                            </page>
+
+                            <page
+                                string="Feuilles de temps"
+                                name="timesheets"
+                            >
+                                <field
+                                    name="timesheet_ids"
+                                    readonly="state in ['closed', 'cancelled']"
+                                >
+                                    <list editable="bottom">
+                                        <field name="date"/>
+                                        <field name="user_id"/>
+                                        <field name="description"/>
+                                        <field name="duration" 
+                                            widget="float_time" sum="Total"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+
+                    <chatter>
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </chatter>
+                </form>
+            </field>
+        </record>
+
+
+        <!-- =====================================================
+             VUE DE RECHERCHE
+             ===================================================== -->
+
+        <record id="view_helpdesk_ticket_search" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.search</field>
+            <field name="model">helpdesk.ticket</field>
+
+            <field name="arch" type="xml">
+                <search string="Recherche Tickets">
+                    <field name="name"/>
+                    <field name="requester_id"/>
+                    <field name="technician_id"/>
+                    <field name="category_id"/>
+                    <field name="state"/>
+                    <field name="priority"/>
+
+                    <separator/>
+
+                    <filter
+                        name="my_tickets"
+                        string="Mes tickets"
+                        domain="[('requester_id', '=', uid)]"
+                    />
+
+                    <filter
+                        name="unassigned"
+                        string="Non assignés"
+                        domain="[('technician_id', '=', False)]"
+                    />
+
+                    <filter
+                        name="in_progress"
+                        string="En cours"
+                        domain="[('state', 'in', [
+                            'new',
+                            'assigned',
+                            'in_progress',
+                            'pending'
+                        ])]"
+                    />
+
+                    <separator/>
+
+                    <group>
+                        <filter
+                            name="group_by_category"
+                            string="Catégorie"
+                            context="{'group_by': 'category_id'}"
+                        />
+
+                        <filter
+                            name="group_by_state"
+                            string="État"
+                            context="{'group_by': 'state'}"
+                        />
+
+                        <filter
+                            name="group_by_priority"
+                            string="Priorité"
+                            context="{'group_by': 'priority'}"
+                        />
+                    </group>
+                </search>
+            </field>
+        </record>
+
+
+        <!-- =====================================================
+             ACTION
+             ===================================================== -->
+
+        <record id="action_helpdesk_ticket" model="ir.actions.act_window">
+            <field name="name">Tickets</field>
+            <field name="res_model">helpdesk.ticket</field>
+            <field name="view_mode">list,form</field>
+
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Créez votre premier ticket HelpDesk !
+                </p>
+            </field>
+        </record>
+
+
+        <!-- =====================================================
+             MENUS
+             ===================================================== -->
+
+        <menuitem
+            id="menu_helpdesk_root"
+            name="HelpDesk"
+            sequence="10"
+            web_icon="bayz_helpdesk,static/description/icon.png"
+        />
+
+        <menuitem
+            id="menu_helpdesk_ticket"
+            name="Tickets"
+            parent="menu_helpdesk_root"
+            action="action_helpdesk_ticket"
+            sequence="10"
+        />
+
+    </data>
+</odoo>
