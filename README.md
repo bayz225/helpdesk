@@ -58,4 +58,6 @@ docker exec -it odoo-v19-helpdesk odoo -c //etc/odoo/odoo.conf -d odoo -p 0 -u b
 
 # Alternative : Vider le cache et mettre à jour le module en lançant un conteneur éphémère (--rm)
 docker compose run --rm odoo odoo -c //etc/odoo/odoo.conf -d odoo -u bayz_helpdesk --stop-after-init
+
+docker compose exec odoo odoo -d NOM_DE_TA_BASE -u bayz_helpdesk --stop-after-init
 ```

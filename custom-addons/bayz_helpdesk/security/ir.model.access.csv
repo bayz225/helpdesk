@@ -3,4 +3,4 @@ access_helpdesk_ticket_user,helpdesk.ticket.user,model_helpdesk_ticket,bayz_help
 access_helpdesk_ticket_technician,helpdesk.ticket.technician,model_helpdesk_ticket,bayz_helpdesk.group_helpdesk_technician,1,1,1,0
 access_helpdesk_ticket_manager,helpdesk.ticket.manager,model_helpdesk_ticket,bayz_helpdesk.group_helpdesk_manager,1,1,1,1
 helpdesk.access_helpdesk_category,access_helpdesk_category,model_helpdesk_category,base.group_user,1,1,1,1
-helpdesk.access_helpdesk_timesheet,access_helpdesk_timesheet,model_helpdesk_timesheet,base.group_user,1,1,1,0
+helpdesk.access_helpdesk_timesheet,access_helpdesk_timesheet,model_helpdesk_timesheet,base.group_user,1,0,0,0

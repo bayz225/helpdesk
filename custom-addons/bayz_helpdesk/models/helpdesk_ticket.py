@@ -161,6 +161,33 @@ class HelpdeskTicket(models.Model):
                 ticket.timesheet_ids.mapped("duration")
             )
 
+    # Marque le début d'une session
+    def _start_work_session(self):
+        for ticket in self:
+            if self.env['helpdesk.timesheet'].search_count([
+                ('ticket_id', '=', ticket.id),
+                ('end_datetime', '=', False)
+            ]) == 0 :
+                self.env['helpdesk.timesheet'].sudo().create({
+                    'ticket_id': ticket.id,
+                    'technician_id': ticket.technician_id.id,
+                    'start_datetime': fields.Datetime.now()
+                })
+
+    # Marque la fin d'une session
+    def _stop_work_session(self):
+        for ticket in self:
+            session = self.env['helpdesk.timesheet'].search([
+                ('ticket_id', '=', ticket.id),
+                ('end_datetime', '=', False)
+            ], limit=1)
+            
+            if session:
+                session.sudo().write({
+                    'end_datetime': fields.Datetime.now()
+                })
+
+    # Methode permetante de modifier le state du ticket avec le nouveau state "new_state"
     def _change_state(self, new_state):
         is_manager = self.env.user.has_group(
             "bayz_helpdesk.group_helpdesk_manager"
@@ -205,6 +232,12 @@ class HelpdeskTicket(models.Model):
             ).write({
                 "state": new_state
             })
+            
+            if current_state != 'in_progress' and new_state == 'in_progress':
+                ticket._start_work_session()
+            
+            if current_state == 'in_progress' and new_state != 'in_progress':
+                ticket._stop_work_session()
 
     def action_assign(self):
         for ticket in self:

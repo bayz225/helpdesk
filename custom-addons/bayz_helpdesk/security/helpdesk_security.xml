@@ -77,5 +77,54 @@
             </field>
         </record>
 
+        <!-- =====================================================
+             RÈGLES D'ACCÈS AUX TIMESHEETS
+             ===================================================== -->
+
+        <!-- Utilisateur HelpDesk :
+             voit uniquement le temps des tickets dont il est demandeur -->
+        <record id="rule_helpdesk_timesheet_user" model="ir.rule">
+            <field name="name">
+                HelpDesk : Temps des tickets de l'utilisateur
+            </field>
+            <field name="model_id" ref="model_helpdesk_timesheet"/>
+            <field name="groups"
+                eval="[(4, ref('bayz_helpdesk.group_helpdesk_user'))]"/>
+            <field name="domain_force">
+                [('ticket_id.requester_id', '=', user.id)]
+            </field>
+        </record>
+
+        <!-- Technicien :
+             voit le temps de ses tickets affectés ou ses tickets demandés -->
+        <record id="rule_helpdesk_timesheet_technician" model="ir.rule">
+            <field name="name">
+                HelpDesk : Temps des tickets du technicien
+            </field>
+            <field name="model_id" ref="model_helpdesk_timesheet"/>
+            <field name="groups"
+                eval="[(4, ref('bayz_helpdesk.group_helpdesk_technician'))]"/>
+            <field name="domain_force">
+                ['|',
+                    ('ticket_id.technician_id', '=', user.id),
+                    ('ticket_id.requester_id', '=', user.id)
+                ]
+            </field>
+        </record>
+
+        <!-- Responsable :
+             voit le temps tous les tickets -->
+        <record id="rule_helpdesk_timesheet_manager" model="ir.rule">
+            <field name="name">
+                HelpDesk : Tous les temps du responsable
+            </field>
+            <field name="model_id" ref="model_helpdesk_timesheet"/>
+            <field name="groups"
+                eval="[(4, ref('bayz_helpdesk.group_helpdesk_manager'))]"/>
+            <field name="domain_force">
+                [(1, '=', 1)]
+            </field>
+        </record>
+        
     </data>
 </odoo>
