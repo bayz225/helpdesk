@@ -23,7 +23,9 @@
         'security/ir.model.access.csv',
         
         # 2. Vues de l'interface
+        'views/menu.xml',
         'views/helpdesk_ticket_views.xml',
+        'views/helpdesk_category_views.xml',
     ],
     'demo': [
         'demo/demo.xml',
