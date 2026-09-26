@@ -1,9 +1,12 @@
+.gitignore
+
 # Python
 __pycache__/
 *.py[cod]
 
 # Environment
 .env
+todo.md
 
 # Odoo
 *.log

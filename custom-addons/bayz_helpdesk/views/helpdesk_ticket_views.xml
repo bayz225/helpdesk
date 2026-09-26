@@ -53,8 +53,14 @@
                         name="is_requester"
                         invisible="1"
                     />
-                    <field name="is_assigned_technician" invisible="1"/>
-                    <field name="is_manager" invisible="1"/>
+                    <field 
+                        name="is_assigned_technician" 
+                        invisible="1"
+                        />
+                    <field 
+                        name="is_manager" 
+                        invisible="1"
+                    />
 
                     <header>
                         <button
