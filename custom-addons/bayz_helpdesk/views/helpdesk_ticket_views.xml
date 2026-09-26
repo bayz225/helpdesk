@@ -44,54 +44,77 @@
 
             <field name="arch" type="xml">
                 <form>
+                    <!-- Champ technique -->
+                    <field
+                        name="technician_domain_ids"
+                        invisible="1"
+                    />
+                    <field
+                        name="is_requester"
+                        invisible="1"
+                    />
+                    <field name="is_assigned_technician" invisible="1"/>
+                    <field name="is_manager" invisible="1"/>
+
                     <header>
                         <button
                             name="action_assign"
                             string="Assigner"
                             type="object"
                             invisible="state not in ['new', 'reopened']"
+                            groups="bayz_helpdesk.group_helpdesk_manager"
                         />
+
                         <button
                             name="action_start"
                             string="Démarrer"
                             type="object"
-                            invisible="state != 'assigned'"
+                            invisible="state != 'assigned' or (not is_manager and not is_assigned_technician)"
                         />
+
                         <button
                             name="action_pending"
                             string="Mettre en attente"
                             type="object"
-                            invisible="state != 'in_progress'"
+                            invisible="state != 'in_progress' or (not is_manager and not is_assigned_technician)"
                         />
+
                         <button
                             name="action_resume"
                             string="Reprendre"
                             type="object"
-                            invisible="state != 'pending'"
+                            invisible="state != 'pending' or (not is_manager and not is_assigned_technician)"
                         />
+
                         <button
                             name="action_resolve"
                             string="Résoudre"
                             type="object"
-                            invisible="state not in ['in_progress', 'pending']"
+                            invisible="state not in ['in_progress', 'pending'] or (not is_manager and not is_assigned_technician)"
                         />
+
                         <button
                             name="action_close"
                             string="Fermer"
                             type="object"
                             invisible="state != 'resolved'"
+                            groups="bayz_helpdesk.group_helpdesk_manager"
                         />
+
                         <button
                             name="action_reopen"
                             string="Rouvrir"
                             type="object"
                             invisible="state not in ['resolved', 'closed']"
+                            groups="bayz_helpdesk.group_helpdesk_manager"
                         />
+
                         <button
                             name="action_cancel"
                             string="Annuler"
                             type="object"
                             invisible="state not in ['new', 'assigned']"
+                            groups="bayz_helpdesk.group_helpdesk_manager"
                         />
 
                         <field
@@ -107,16 +130,10 @@
                                 <field
                                     name="name"
                                     placeholder="Titre du ticket..."
-                                    readonly="state not in ['new', 'reopened']"
+                                    readonly="(not is_manager and not is_requester) or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
                             </h1>
                         </div>
-
-                        <!-- Champ technique utilisé pour le domaine du technicien -->
-                        <field
-                            name="technician_domain_ids"
-                            invisible="1"
-                        />
 
                         <group>
                             <group>
@@ -128,12 +145,12 @@
                                 <field
                                     name="technician_id"
                                     domain="[('id', 'in', technician_domain_ids)]"
-                                    readonly="state not in ['new', 'reopened']"
+                                    readonly="not is_manager or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
 
                                 <field
                                     name="category_id"
-                                    readonly="state not in ['new', 'reopened']"
+                                    readonly="(not is_manager and not is_requester) or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
                             </group>
 
@@ -141,13 +158,14 @@
                                 <field
                                     name="priority"
                                     widget="priority"
-                                    readonly="state not in ['new', 'reopened']"
+                                    readonly="not is_manager or state in ['in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
 
                                 <field
                                     name="deadline"
                                     readonly="1"
                                 />
+
                             </group>
                         </group>
 
@@ -158,7 +176,7 @@
                             >
                                 <field
                                     name="description"
-                                    readonly="state not in ['new', 'reopened']"
+                                    readonly="(not is_manager and not is_requester) or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
                             </page>
 
@@ -169,7 +187,7 @@
                                 <field
                                     name="timesheet_ids"
                                 >
-                                    <list editable="bottom">
+                                    <list>
                                         <field name="technician_id"/>
                                         <field name="start_datetime"/>
                                         <field name="end_datetime"/>

@@ -61,3 +61,10 @@ docker compose run --rm odoo odoo -c //etc/odoo/odoo.conf -d odoo -u bayz_helpde
 
 docker compose exec odoo odoo -d NOM_DE_TA_BASE -u bayz_helpdesk --stop-after-init
 ```
+Entrer dans le conteneur Odoo
+Depuis PowerShell :
+```bash
+docker compose exec -it <nom_du_conteneur_odoo> bash
+
+odoo shell -d <nom_de_ta_base>
+```
