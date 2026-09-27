@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+            id="menu_helpdesk_root"
+            name="HelpDesk"
+            sequence="10"
+            web_icon="bayz_helpdesk,static/description/icon.png"
+        />
+
+    <menuitem
+            id="menu_parameter_master"
+            name="Paramètres"
+            parent="menu_helpdesk_root"
+            sequence="50"
+            groups="bayz_helpdesk.group_helpdesk_technician"
+        />
+
+</odoo>

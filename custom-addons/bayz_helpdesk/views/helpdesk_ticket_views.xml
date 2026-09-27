@@ -13,22 +13,30 @@
             <field name="arch" type="xml">
                 <list
                     decoration-muted="state == 'cancelled'"
-                    decoration-success="state == 'resolved'">
-
+                    decoration-success="state == 'resolved'"
+                    sample="1"
+                    limit="20"
+                >
                     <field name="name"/>
                     <field name="requester_id"/>
                     <field name="technician_id"/>
-                    <field name="priority" widget="badge"/>
+                    <field name="priority" widget="priority"/>
 
                     <field
                         name="state"
                         widget="badge"
                         decoration-info="state == 'in_progress'"
-                        decoration-warning="state == 'pending'"
+                        decoration-warning="state in ['assigned', 'pending']"
+                        decoration-danger="state == 'cancelled'"
+                        decoration-success="state == 'resolved'"
                     />
 
                     <field name="deadline"/>
-                    <field name="total_time" widget="float_time" sum="Total heures"/>
+                    <field
+                        name="total_time"
+                        widget="float_time"
+                        sum="Total heures"
+                    />
                 </list>
             </field>
         </record>
@@ -249,17 +257,13 @@
                     <filter
                         name="in_progress"
                         string="En cours"
-                        domain="[('state', 'in', [
-                            'new',
-                            'assigned',
-                            'in_progress',
-                            'pending'
-                        ])]"
+                        domain="[('state', '=', 'in_progress')]"
                     />
 
                     <separator/>
 
                     <group>
+
                         <filter
                             name="group_by_category"
                             string="Catégorie"
@@ -277,7 +281,9 @@
                             string="Priorité"
                             context="{'group_by': 'priority'}"
                         />
+
                     </group>
+
                 </search>
             </field>
         </record>
@@ -303,13 +309,6 @@
         <!-- =====================================================
              MENUS
              ===================================================== -->
-
-        <menuitem
-            id="menu_helpdesk_root"
-            name="HelpDesk"
-            sequence="10"
-            web_icon="bayz_helpdesk,static/description/icon.png"
-        />
 
         <menuitem
             id="menu_helpdesk_ticket"

@@ -8,6 +8,7 @@ class HelpdeskTicket(models.Model):
     _name = "helpdesk.ticket"
     _description = "Ticket HelpDesk"
     _inherit = ["mail.thread", "mail.activity.mixin"]
+    _order = "priority desc, create_date desc"
     
     # Workflow de l'etat d'un ticket
     ALLOWED_TRANSITIONS = {
