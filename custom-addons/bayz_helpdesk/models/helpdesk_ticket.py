@@ -15,7 +15,7 @@ class HelpdeskTicket(models.Model):
         "new": ["assigned", "cancelled"],
         "assigned": ["in_progress", "cancelled"],
         "in_progress": ["pending", "resolved"],
-        "pending": ["in_progress", "resolved"],
+        "pending": ["in_progress", "resolved", "assigned"],
         "resolved": ["closed", "reopened"],
         "closed": ["reopened"],
         "reopened": ["assigned"],
@@ -31,6 +31,7 @@ class HelpdeskTicket(models.Model):
         ("in_progress", "resolved"): ["manager", "technician"],
         ("pending", "in_progress"): ["manager", "technician"],
         ("pending", "resolved"): ["manager", "technician"],
+        ("pending", "assigned"): ["manager"],
         ("resolved", "closed"): ["manager"],
         ("resolved", "reopened"): ["manager"],
         ("closed", "reopened"): ["manager"],
@@ -497,6 +498,12 @@ class HelpdeskTicket(models.Model):
                     raise UserError(
                         f"Le champ '{field_name}' ne peut pas être modifié dans l'état actuel du ticket."
                     )
+                    
+                if field_name == "technician_id":
+                    new_technician_id = vals.get("technician_id")
+                    
+                    if ticket.technician_id != new_technician_id:
+                        self._change_state('assigned')
         
         # Écriture réelle
         return super().write(vals)
