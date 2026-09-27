@@ -137,13 +137,19 @@ class HelpdeskTicket(models.Model):
     is_manager = fields.Boolean(
         string="Est responsable",
         compute="_compute_is_manager",
-)
+    )
     
     reopened_date = fields.Datetime(
-    string="Date de réouverture",
-    readonly=True,
-    copy=False,
-)
+        string="Date de réouverture",
+        readonly=True,
+        copy=False,
+    )
+    
+    is_overdue = fields.Boolean(
+        string="En retard",
+        compute="_compute_is_overdue",
+        search="_search_is_overdue",
+    )
 
     @api.depends_context("uid")
     def _compute_technician_domain_ids(self):
@@ -205,6 +211,43 @@ class HelpdeskTicket(models.Model):
             ticket.total_time = sum(
                 ticket.timesheet_ids.mapped("duration")
             )
+
+    # Verifier les tickets dont la deadline est dépassé
+    @api.depends('state', 'deadline')
+    def _compute_is_overdue(self):
+        now = fields.Datetime.now()
+        
+        for ticket in self:
+            ticket.is_overdue = bool(
+                ticket.deadline
+                and ticket.deadline < now
+                and ticket.state not in ['resolved', 'closed', 'cancelled']
+            )
+
+    # Verifier les tickets dont la deadline est dépassé (Search)
+    def _search_is_overdue(self, operator, value):
+        if operator not in ("=", "!="):
+            raise UserError(
+                "L'opérateur utilisé pour « En retard » n'est pas supporté."
+            )
+
+        now = fields.Datetime.now()
+
+        overdue_domain = [
+            ("deadline", "<", now),
+            ("state", "not in", [
+                "resolved",
+                "closed",
+                "cancelled",
+            ]),
+        ]
+
+        if (operator == "=" and value) or (
+            operator == "!=" and not value
+        ):
+            return overdue_domain
+
+        return ["!"] + overdue_domain
 
     # Marque le début d'une session
     def _start_work_session(self):
