@@ -20,7 +20,10 @@
                     <field name="name"/>
                     <field name="requester_id"/>
                     <field name="technician_id"/>
-                    <field name="priority" widget="priority"/>
+                    <field 
+                        name="priority" 
+                        widget="priority"
+                    />
 
                     <field
                         name="state"
@@ -31,7 +34,12 @@
                         decoration-success="state == 'resolved'"
                     />
 
-                    <field name="deadline"/>
+                    <field name="is_overdue" invisible="1"/>
+                    <field 
+                        name="deadline"
+                        decoration-danger="is_overdue"
+                    />
+
                     <field
                         name="total_time"
                         widget="float_time"
@@ -258,6 +266,12 @@
                         name="in_progress"
                         string="En cours"
                         domain="[('state', '=', 'in_progress')]"
+                    />
+
+                    <filter
+                        name="deadline_expired"
+                        string="Délai passé"
+                        domain="[('is_overdue', '=', True)]"
                     />
 
                     <separator/>
