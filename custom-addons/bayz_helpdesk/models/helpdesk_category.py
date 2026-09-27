@@ -1,9 +1,19 @@
 from odoo import models, fields, api
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
+import re
+import unicodedata
 
 class HelpdeskCategory(models.Model):
     _name = 'helpdesk.category'
     _description = 'Catégorie HelpDesk'
+    
+    _sql_constraints = [
+        (
+            "helpdesk_category_name_unique",
+            "UNIQUE(name)",
+            "Le nom de la catégorie doit être unique.",
+        ),
+    ]
 
     name = fields.Char(string='Nom de la catégorie', required=True)
     active = fields.Boolean(string='Actif', default=True)
@@ -21,6 +31,35 @@ class HelpdeskCategory(models.Model):
         string='Est un manager',
         compute='_compute_is_manager',
     )
+
+    @api.constrains("name")
+    def _check_unique_name(self):
+        for category in self:
+            normalized_name = self._normalize_category_name(
+                category.name
+            )
+
+            duplicate = self.search([
+                ("id", "!=", category.id),
+            ]).filtered(
+                lambda c: self._normalize_category_name(c.name)
+                == normalized_name
+            )
+
+            if duplicate:
+                raise ValidationError(
+                    "Une catégorie portant ce nom existe déjà."
+                )
+
+    def _normalize_category_name(self, name):
+        name = name.strip()
+        name = re.sub(r"\s+", " ", name)
+        name = unicodedata.normalize("NFKD", name)
+        name = "".join(
+            char for char in name
+            if not unicodedata.combining(char)
+        )
+        return name.casefold()
 
     @api.depends('ticket_ids')
     def _compute_count_tickets(self):
