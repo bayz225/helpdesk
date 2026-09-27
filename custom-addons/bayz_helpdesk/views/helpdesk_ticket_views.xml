@@ -15,7 +15,7 @@
                     decoration-muted="state == 'cancelled'"
                     decoration-success="state == 'resolved'"
                     sample="1"
-                    limit="20"
+                    limit="10"
                 >
                     <field name="name"/>
                     <field name="requester_id"/>
@@ -147,7 +147,11 @@
                     </header>
 
                     <sheet>
-                        <div class="oe_title">
+                        <div class="oe_title mb-4">
+                            <h4>
+                                <field name="reference" readonly="1"/>
+                            </h4>
+
                             <h1>
                                 <field
                                     name="name"

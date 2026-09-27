@@ -37,6 +37,14 @@ class HelpdeskTicket(models.Model):
         ("reopened", "assigned"): ["manager"],
     }
 
+    reference = fields.Char(
+        string="Référence",
+        required=True,
+        readonly=True,
+        copy=False,
+        default='Nouveau'
+    )
+
     # Informations générales
     name = fields.Char(
         string="Titre",
@@ -362,6 +370,14 @@ class HelpdeskTicket(models.Model):
 
     def action_cancel(self):
         self._change_state("cancelled")
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('reference', 'Nouveau') == 'Nouveau':
+                vals['reference'] = self.env['ir.sequence'].next_by_code('helpdesk.ticket')
+            
+        return super().create(vals_list)
 
     def write(self, vals):
         # Rôles de l'utilisateur connecté
