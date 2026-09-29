@@ -93,6 +93,7 @@ class HelpdeskTicket(models.Model):
         string="État",
         default="new",
         tracking=True,
+        group_expand=True,
     )
 
     priority = fields.Selection(
@@ -284,8 +285,10 @@ class HelpdeskTicket(models.Model):
                     'end_datetime': fields.Datetime.now()
                 })
 
-    # Methode permetante de modifier le state du ticket avec le nouveau state "new_state"
-    def _change_state(self, new_state):
+    def action_kanban_change_state(self, new_state):
+        self._change_state(new_state)
+
+    def _check_state_transition(self, new_state):
         is_manager = self.env.user.has_group(
             "bayz_helpdesk.group_helpdesk_manager"
         )
@@ -323,6 +326,13 @@ class HelpdeskTicket(models.Model):
                 raise UserError(
                     "Vous n'avez pas les droits nécessaires pour effectuer cette transition."
                 )
+
+    # Methode permetante de modifier le state du ticket avec le nouveau state "new_state"
+    def _change_state(self, new_state):
+        self._check_state_transition(new_state)
+        
+        for ticket in self:
+            current_state = ticket.state
             
             values = {
                 "state": new_state

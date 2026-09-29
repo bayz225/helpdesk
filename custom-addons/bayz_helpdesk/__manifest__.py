@@ -29,6 +29,11 @@
         'views/helpdesk_ticket_views.xml',
         'views/helpdesk_category_views.xml',
     ],
+    "assets": {
+        "web.assets_backend": [
+            "bayz_helpdesk/static/src/js/helpdesk_kanban.js",
+        ],
+    },
     'demo': [
         'demo/demo.xml',
     ],
