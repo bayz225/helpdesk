@@ -22,11 +22,18 @@
         'security/helpdesk_security.xml',
         'security/ir.model.access.csv',
         
+        "data/ir_sequence.xml",
+        
         # 2. Vues de l'interface
         'views/menu.xml',
         'views/helpdesk_ticket_views.xml',
         'views/helpdesk_category_views.xml',
     ],
+    "assets": {
+        "web.assets_backend": [
+            "bayz_helpdesk/static/src/js/helpdesk_kanban.js",
+        ],
+    },
     'demo': [
         'demo/demo.xml',
     ],

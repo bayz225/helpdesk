@@ -15,7 +15,7 @@
                     decoration-muted="state == 'cancelled'"
                     decoration-success="state == 'resolved'"
                     sample="1"
-                    limit="20"
+                    limit="10"
                 >
                     <field name="name"/>
                     <field name="requester_id"/>
@@ -147,7 +147,11 @@
                     </header>
 
                     <sheet>
-                        <div class="oe_title">
+                        <div class="oe_title mb-4">
+                            <h4>
+                                <field name="reference" readonly="1"/>
+                            </h4>
+
                             <h1>
                                 <field
                                     name="name"
@@ -232,6 +236,71 @@
 
 
         <!-- =====================================================
+             VUE KANBAN
+             ===================================================== -->
+
+        <record id="view_helpdesk_ticket_kanban" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.kanban</field>
+            <field name="model">helpdesk.ticket</field>
+
+            <field name="arch" type="xml">
+                <kanban 
+                    default_group_by="state"
+                    js_class="helpdesk_kanban"
+                    records_draggable="true"
+                    quick_create="false"
+                >
+                    <field name="name"/>
+                    <field name="reference"/>
+                    <field name="requester_id"/>
+                    <field name="technician_id"/>
+                    <field name="priority"/>
+                    <field name="state"/>
+                    <field name="total_time"/>
+
+                    <templates>
+                        <t t-name="card">
+                            <div class="oe_kanban_global_click">
+                                <div class="d-flex justify-content-between">
+                                    <strong>
+                                        <field name="reference"/>
+                                    </strong>
+
+                                    <field
+                                        name="priority"
+                                        widget="priority"
+                                    />
+                                </div>
+
+                                <div class="mt-2">
+                                    <strong>
+                                        <field name="name"/>
+                                    </strong>
+                                </div>
+
+                                <div class="mt-2">
+                                    <field name="requester_id"/>
+                                </div>
+
+                                <div>
+                                    <field name="technician_id"/>
+                                </div>
+
+                                <div class="mt-2">
+                                    <field
+                                        name="total_time"
+                                        widget="float_time"
+                                    />
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+
+        <!-- =====================================================
              VUE DE RECHERCHE
              ===================================================== -->
 
@@ -310,7 +379,7 @@
         <record id="action_helpdesk_ticket" model="ir.actions.act_window">
             <field name="name">Tickets</field>
             <field name="res_model">helpdesk.ticket</field>
-            <field name="view_mode">list,form</field>
+            <field name="view_mode">list,form,kanban</field>
 
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">

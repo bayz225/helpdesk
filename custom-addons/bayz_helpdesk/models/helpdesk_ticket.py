@@ -15,7 +15,7 @@ class HelpdeskTicket(models.Model):
         "new": ["assigned", "cancelled"],
         "assigned": ["in_progress", "cancelled"],
         "in_progress": ["pending", "resolved"],
-        "pending": ["in_progress", "resolved"],
+        "pending": ["in_progress", "resolved", "assigned"],
         "resolved": ["closed", "reopened"],
         "closed": ["reopened"],
         "reopened": ["assigned"],
@@ -31,11 +31,20 @@ class HelpdeskTicket(models.Model):
         ("in_progress", "resolved"): ["manager", "technician"],
         ("pending", "in_progress"): ["manager", "technician"],
         ("pending", "resolved"): ["manager", "technician"],
+        ("pending", "assigned"): ["manager"],
         ("resolved", "closed"): ["manager"],
         ("resolved", "reopened"): ["manager"],
         ("closed", "reopened"): ["manager"],
         ("reopened", "assigned"): ["manager"],
     }
+
+    reference = fields.Char(
+        string="Référence",
+        required=True,
+        readonly=True,
+        copy=False,
+        default='Nouveau'
+    )
 
     # Informations générales
     name = fields.Char(
@@ -84,6 +93,7 @@ class HelpdeskTicket(models.Model):
         string="État",
         default="new",
         tracking=True,
+        group_expand=True,
     )
 
     priority = fields.Selection(
@@ -275,8 +285,10 @@ class HelpdeskTicket(models.Model):
                     'end_datetime': fields.Datetime.now()
                 })
 
-    # Methode permetante de modifier le state du ticket avec le nouveau state "new_state"
-    def _change_state(self, new_state):
+    def action_kanban_change_state(self, new_state):
+        self._change_state(new_state)
+
+    def _check_state_transition(self, new_state):
         is_manager = self.env.user.has_group(
             "bayz_helpdesk.group_helpdesk_manager"
         )
@@ -314,6 +326,13 @@ class HelpdeskTicket(models.Model):
                 raise UserError(
                     "Vous n'avez pas les droits nécessaires pour effectuer cette transition."
                 )
+
+    # Methode permetante de modifier le state du ticket avec le nouveau state "new_state"
+    def _change_state(self, new_state):
+        self._check_state_transition(new_state)
+        
+        for ticket in self:
+            current_state = ticket.state
             
             values = {
                 "state": new_state
@@ -362,6 +381,14 @@ class HelpdeskTicket(models.Model):
 
     def action_cancel(self):
         self._change_state("cancelled")
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('reference', 'Nouveau') == 'Nouveau':
+                vals['reference'] = self.env['ir.sequence'].next_by_code('helpdesk.ticket')
+            
+        return super().create(vals_list)
 
     def write(self, vals):
         # Rôles de l'utilisateur connecté
@@ -481,6 +508,12 @@ class HelpdeskTicket(models.Model):
                     raise UserError(
                         f"Le champ '{field_name}' ne peut pas être modifié dans l'état actuel du ticket."
                     )
+                    
+                if field_name == "technician_id":
+                    new_technician_id = vals.get("technician_id")
+                    
+                    if ticket.technician_id != new_technician_id:
+                        self._change_state('assigned')
         
         # Écriture réelle
         return super().write(vals)
