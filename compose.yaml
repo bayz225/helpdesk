@@ -15,8 +15,12 @@ services:
 
   odoo:
     user: root
-    image: odoo:${ODOO_VERSION}
+    build:
+      context: .
+      args:
+        ODOO_VERSION: ${ODOO_VERSION}
     container_name: ${ODOO_CONTAINER_NAME}
+    image: odoo:${ODOO_VERSION}
     restart: always
     depends_on:
       - db
