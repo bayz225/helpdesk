@@ -16,19 +16,38 @@ Le code source est structuré de la manière suivante :
 
 ```text
 custom-addons/
-└── helpdesk/
-    ├── __init__.py                
-    ├── __manifest__.py           
+└── bayz_helpdesk/
+    ├── __init__.py
+    ├── __manifest__.py
+    ├── controllers/
+    │   ├── __init__.py
+    │   └── controllers.py
+    ├── data/
+    │   └── ir_sequence.xml
+    ├── demo/
+    │   └── demo.xml
     ├── models/
-    │   ├── __init__.py            
+    │   ├── __init__.py
     │   ├── helpdesk_category.py
     │   ├── helpdesk_ticket.py
     │   └── helpdesk_timesheet.py
     ├── security/
-    │   ├── helpdesk_security.xml 
-    │   └── ir.model.access.csv    
-    └── views/
-        └── helpdesk_ticket_views.xml
+    │   ├── helpdesk_security.xml
+    │   └── ir.model.access.csv
+    ├── static/
+    │   ├── description/
+    │   └── src/
+    │       └── js/
+    │           └── helpdesk_kanban.js
+    ├── views/
+    │   ├── helpdesk_category_views.xml
+    │   ├── helpdesk_ticket_views.xml
+    │   ├── helpdesk_timesheet_views.xml
+    │   └── menu.xml
+    └── wizard/
+        ├── __init__.py
+        ├── helpdesk_timesheet_export_wizard.py
+        └── helpdesk_timesheet_export_wizard_views.xml
 ```
 
 ## 🛠️ Commandes Utiles
