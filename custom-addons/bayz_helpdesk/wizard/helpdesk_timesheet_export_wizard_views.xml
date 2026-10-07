@@ -1,0 +1,55 @@
+<odoo>
+    <record id="view_helpdesk_timesheet_export_wizard_form" model="ir.ui.view">
+        <field name="name">helpdesk.timesheet.export.wizard.form</field>
+        <field name="model">helpdesk.timesheet.export.wizard</field>
+
+        <field name="arch" type="xml">
+            <form string="Export des statistiques">
+                <group>
+                    <group>
+                        <field name="date_from"/>
+                    </group>
+                    <group>
+                        <field name="date_to"/>
+                    </group>
+                </group>
+
+                <group>
+                    <field name="technician_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                    <field name="category_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                </group>
+
+                <p class="text-muted">
+                    Laissez un champ vide pour ne pas filtrer (dates, techniciens ou catégories).
+                </p>
+                
+                <footer>
+                    <button
+                        name="action_export_excel"
+                        type="object"
+                        string="Exporter en Excel"
+                        class="btn-primary"
+                        data-hotkey="q"
+                    />
+                    <button string="Fermer" special="cancel" data-hotkey="x"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_helpdesk_timesheet_export_wizard" model="ir.actions.act_window">
+        <field name="name">Exporter les statistiques</field>
+        <field name="res_model">helpdesk.timesheet.export.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem
+        id="menu_helpdesk_timesheet_export"
+        name="Export statistiques"
+        parent="menu_helpdesk_reporting_master"
+        action="action_helpdesk_timesheet_export_wizard"
+        sequence="90"
+        groups="bayz_helpdesk.group_helpdesk_manager"
+        />
+</odoo>

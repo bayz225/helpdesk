@@ -111,7 +111,7 @@
         <menuitem
             id="menu_category"
             name="Catégories"
-            parent="menu_parameter_master"
+            parent="menu_helpdesk_parameter_master"
             action="action_helpdesk_category"
             sequence="10"
         />
