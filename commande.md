@@ -20,7 +20,7 @@ Entrer dans le conteneur Odoo
 Depuis PowerShell :
 
 ```bash
-docker compose exec -it <nom_du_conteneur_odoo> bash
+docker compose exec -it odoo bash
 
-odoo shell -d <nom_de_ta_base>
+odoo shell -d odoo-helpdesk
 ```

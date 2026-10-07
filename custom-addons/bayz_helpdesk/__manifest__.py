@@ -28,11 +28,18 @@
         'views/menu.xml',
         'views/helpdesk_ticket_views.xml',
         'views/helpdesk_category_views.xml',
+        'views/helpdesk_timesheet_views.xml',
+        
+        # 3. Wizard
+        'wizard/helpdesk_timesheet_export_wizard_views.xml',
     ],
     "assets": {
         "web.assets_backend": [
             "bayz_helpdesk/static/src/js/helpdesk_kanban.js",
         ],
+    },
+    'external_dependencies': {
+        'python': ['openpyxl']
     },
     'demo': [
         'demo/demo.xml',

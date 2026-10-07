@@ -8,7 +8,7 @@ class HelpdeskTicket(models.Model):
     _name = "helpdesk.ticket"
     _description = "Ticket HelpDesk"
     _inherit = ["mail.thread", "mail.activity.mixin"]
-    _order = "priority desc, create_date desc"
+    _order = "create_date desc, priority desc"
     
     # Workflow de l'etat d'un ticket
     ALLOWED_TRANSITIONS = {
@@ -160,6 +160,18 @@ class HelpdeskTicket(models.Model):
         compute="_compute_is_overdue",
         search="_search_is_overdue",
     )
+    
+    times_by_technician = fields.Float(
+        string="Temps passé par technicien",
+        compute="_compute_time_by_technician",
+        store=True
+    )
+    
+    time_by_category = fields.Float(
+        string="Temps par catégorie",
+        compute="_compute_time_by_category",
+        store=True,
+    )
 
     @api.depends_context("uid")
     def _compute_technician_domain_ids(self):
@@ -221,6 +233,24 @@ class HelpdeskTicket(models.Model):
             ticket.total_time = sum(
                 ticket.timesheet_ids.mapped("duration")
             )
+
+    @api.depends("technician_id", "timesheet_ids.duration", "timesheet_ids.technician_id")
+    def _compute_time_by_technician(self):
+        for ticket in self:
+            if ticket.technician_id:
+                matching_ligne = ticket.timesheet_ids.filtered(
+                    lambda l: l.technician_id == ticket.technician_id
+                )
+                ticket.times_by_technician = sum(matching_ligne.mapped('duration'))
+            else:
+                ticket.times_by_technician = 0.0
+
+    @api.depends("category_id", "total_time")
+    def _compute_time_by_category(self):
+        for ticket in self:
+            # Filtrer sur tout le recordset 'self'
+            matching = self.filtered(lambda t: t.category_id == ticket.category_id)
+            ticket.time_by_category = sum(matching.mapped("total_time"))
 
     # Verifier les tickets dont la deadline est dépassé
     @api.depends('state', 'deadline')
