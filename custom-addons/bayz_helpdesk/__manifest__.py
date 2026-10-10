@@ -18,6 +18,7 @@
         'mail' # Requis pour le chatter et les activités
     ],
     'data': [
+        'data/mail_template.xml',
         # 1. Sécurité
         'security/helpdesk_security.xml',
         'security/ir.model.access.csv',
