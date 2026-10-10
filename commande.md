@@ -14,6 +14,9 @@ docker exec -it odoo-v19-helpdesk odoo -c //etc/odoo/odoo.conf -d odoo -p 0 -u b
 docker compose run --rm odoo odoo -c //etc/odoo/odoo.conf -d odoo -u bayz_helpdesk --stop-after-init
 
 docker compose exec odoo odoo -d NOM_DE_TA_BASE -u bayz_helpdesk --stop-after-init
+
+# Lance des testes après la MàJ 
+docker compose exec odoo odoo -d NOM_DE_TA_DB -u bayz_helpdesk --test-enable --stop-after-init --http-port=8070
 ```
 
 Entrer dans le conteneur Odoo
