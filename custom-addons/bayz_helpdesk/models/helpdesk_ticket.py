@@ -565,7 +565,7 @@ class HelpdeskTicket(models.Model):
                 if field_name == "technician_id":
                     new_technician_id = vals.get("technician_id")
                     
-                    if ticket.technician_id != new_technician_id:
+                    if ticket.technician_id.id != new_technician_id:
                         self._change_state('assigned')
         
         # Écriture réelle
