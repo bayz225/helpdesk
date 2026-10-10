@@ -34,6 +34,14 @@ services:
       - ./requirements.txt:/mnt/requirements.txt:ro
     command: odoo -c /etc/odoo/odoo.conf --dev xml,qweb
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
 volumes:
   odoo_helpdesk_web_datas:
   postgres_helpdesk_db_datas:

@@ -318,6 +318,27 @@ class HelpdeskTicket(models.Model):
     def action_kanban_change_state(self, new_state):
         self._change_state(new_state)
 
+    # Envoyer un email lors du changement d'état
+    def _send_state_notification(self):
+        template = self.env.ref(
+            "bayz_helpdesk.mail_template_helpdesk_ticket_update",
+            raise_if_not_found=False,
+        )
+
+        if not template:
+            return
+
+        for ticket in self:
+            if not ticket.requester_id.partner_id.email:
+                raise UserError(
+                    f"Le demandeur du ticket '{ticket.name}' n'a pas d'adresse e-mail."
+                )
+            
+            template.send_mail(
+                ticket.id,
+                force_send=True,
+            )
+
     def _check_state_transition(self, new_state):
         is_manager = self.env.user.has_group(
             "bayz_helpdesk.group_helpdesk_manager"
@@ -381,6 +402,8 @@ class HelpdeskTicket(models.Model):
             
             if current_state == 'in_progress' and new_state != 'in_progress':
                 ticket._stop_work_session()
+            
+            ticket._send_state_notification()
 
     def action_assign(self):
         for ticket in self:
