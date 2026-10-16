@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 
+# Helpers partagés pour créer les données de test.
 class HelpdeskTestMixin:
 
     @classmethod

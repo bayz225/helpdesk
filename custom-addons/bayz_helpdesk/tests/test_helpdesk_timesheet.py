@@ -6,6 +6,7 @@ from odoo.tests.common import TransactionCase
 from .common import HelpdeskTestMixin
 
 
+# Durées, contraintes et statistiques des feuilles de temps.
 class TestHelpdeskTimesheet(HelpdeskTestMixin, TransactionCase):
 
     def setUp(self):
@@ -89,6 +90,7 @@ class TestHelpdeskTimesheet(HelpdeskTestMixin, TransactionCase):
             datetime(2025, 1, 1, 12, 0),
         )
 
+        # Ignore les feuilles préexistantes hors des tickets de ce test.
         statistics = self.env["helpdesk.timesheet"].get_technician_stats([
             ("ticket_id", "in", [first_ticket.id, second_ticket.id]),
         ])

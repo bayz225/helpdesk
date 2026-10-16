@@ -5,6 +5,7 @@ from odoo.exceptions import UserError
 from odoo.tests.common import TransactionCase
 
 
+# Échéances SLA, réouverture et recherche des tickets en retard.
 class TestHelpdeskSLA(TransactionCase):
 
     @classmethod
@@ -70,6 +71,7 @@ class TestHelpdeskSLA(TransactionCase):
         from unittest.mock import patch
         from odoo.addons.bayz_helpdesk.models.helpdesk_ticket import HelpdeskTicket
 
+        # Isole le workflow de l'envoi réel d'e-mails.
         with patch.object(HelpdeskTicket, "_send_state_notification"):
             ticket.with_user(manager).write({"technician_id": self.env.user.id})
             ticket.with_user(manager)._change_state("in_progress")

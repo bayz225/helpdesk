@@ -10,6 +10,7 @@ from odoo.tests.common import TransactionCase
 from .common import HelpdeskTestMixin
 
 
+# Validation des filtres et contenu du fichier Excel exporté.
 class TestHelpdeskTimesheetExport(HelpdeskTestMixin, TransactionCase):
 
     def setUp(self):

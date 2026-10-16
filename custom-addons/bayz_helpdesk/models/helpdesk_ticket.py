@@ -10,7 +10,7 @@ class HelpdeskTicket(models.Model):
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "create_date desc, priority desc"
     
-    # Workflow de l'etat d'un ticket
+    # Transitions permises et rôles autorisés pour chaque transition.
     ALLOWED_TRANSITIONS = {
         "new": ["assigned", "cancelled"],
         "assigned": ["in_progress", "cancelled"],
@@ -192,6 +192,7 @@ class HelpdeskTicket(models.Model):
 
     @api.depends("priority", "create_date", "reopened_date")
     def _compute_deadline(self):
+        # À la réouverture, le délai repart de reopened_date.
         for ticket in self:
             base_date = ticket.reopened_date or ticket.create_date or fields.Datetime.now()
 

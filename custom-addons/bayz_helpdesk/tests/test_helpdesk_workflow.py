@@ -8,6 +8,7 @@ from odoo.addons.bayz_helpdesk.models.helpdesk_ticket import HelpdeskTicket
 from .common import HelpdeskTestMixin
 
 
+# Transitions, permissions et sessions déclenchées par le workflow.
 class TestHelpdeskWorkflow(HelpdeskTestMixin, TransactionCase):
 
     def setUp(self):
@@ -23,6 +24,7 @@ class TestHelpdeskWorkflow(HelpdeskTestMixin, TransactionCase):
         )
 
     def _assign_ticket(self, ticket):
+        # L'affectation déclenche une notification, inutile pour ces tests.
         with patch.object(HelpdeskTicket, "_send_state_notification"):
             ticket.with_user(self.manager).write({
                 "technician_id": self.technician.id,

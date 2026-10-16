@@ -4,6 +4,7 @@ from odoo.tests.common import TransactionCase
 from .common import HelpdeskTestMixin
 
 
+# Unicité des noms, droits de gestion et compteur de tickets.
 class TestHelpdeskCategory(HelpdeskTestMixin, TransactionCase):
 
     def test_category_names_are_unique_after_normalization(self):
