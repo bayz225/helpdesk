@@ -404,7 +404,8 @@ class HelpdeskTicket(models.Model):
             if current_state == 'in_progress' and new_state != 'in_progress':
                 ticket._stop_work_session()
             
-            ticket._send_state_notification()
+            if current_state != new_state:
+                ticket._send_state_notification()
 
     def action_assign(self):
         for ticket in self:
