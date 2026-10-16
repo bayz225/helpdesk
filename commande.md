@@ -17,6 +17,8 @@ docker compose exec odoo odoo -d NOM_DE_TA_BASE -u bayz_helpdesk --stop-after-in
 
 # Lance des testes après la MàJ 
 docker compose exec odoo odoo -d NOM_DE_TA_DB -u bayz_helpdesk --test-enable --stop-after-init --http-port=8070
+
+docker compose exec odoo odoo -d odoo-helpdesk -u bayz_helpdesk --test-tags /bayz_helpdesk --stop-after-init
 ```
 
 Entrer dans le conteneur Odoo
