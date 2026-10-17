@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import _, models, fields, api
 from odoo.exceptions import UserError, ValidationError
 import re
 import unicodedata
@@ -45,7 +45,7 @@ class HelpdeskCategory(models.Model):
 
             if duplicate:
                 raise ValidationError(
-                    "Une catégorie portant ce nom existe déjà."
+                    _("Une catégorie portant ce nom existe déjà.")
                 )
 
     def _normalize_category_name(self, name):
@@ -76,7 +76,7 @@ class HelpdeskCategory(models.Model):
 
         if not is_manager and {"name", "active"} & set(vals):
             raise UserError(
-                "Seul le responsable peut modifier une catégorie."
+                _("Seul le responsable peut modifier une catégorie.")
             )
 
         return super().write(vals)

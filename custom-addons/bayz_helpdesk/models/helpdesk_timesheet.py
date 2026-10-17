@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import _, models, fields, api
 from odoo.exceptions import ValidationError
 
 class HelpdeskTimesheet(models.Model):
@@ -44,7 +44,7 @@ class HelpdeskTimesheet(models.Model):
         for record in self:
             if record.end_datetime and record.end_datetime < record.start_datetime:
                 raise ValidationError(
-                    "L'heure de fin d'une session doit être postérieure ou égale à l'heure de début."
+                    _("L'heure de fin d'une session doit être postérieure ou égale à l'heure de début.")
                 )
 
     @api.depends('start_datetime', 'end_datetime')
