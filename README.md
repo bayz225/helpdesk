@@ -10,46 +10,6 @@ Suivi des SLA : Gestion des dates limites en fonction du niveau de priorité.
 Feuilles de temps : Intégration pour le suivi du temps passé sur chaque intervention.
 Sécurité et Droits : Gestion des accès basée sur l'héritage des groupes natifs d'Odoo.
 
-## 📂 Architecture du module
-
-Le code source est structuré de la manière suivante :
-
-```text
-custom-addons/
-└── bayz_helpdesk/
-    ├── __init__.py
-    ├── __manifest__.py
-    ├── controllers/
-    │   ├── __init__.py
-    │   └── controllers.py
-    ├── data/
-    │   └── ir_sequence.xml
-    ├── demo/
-    │   └── demo.xml
-    ├── models/
-    │   ├── __init__.py
-    │   ├── helpdesk_category.py
-    │   ├── helpdesk_ticket.py
-    │   └── helpdesk_timesheet.py
-    ├── security/
-    │   ├── helpdesk_security.xml
-    │   └── ir.model.access.csv
-    ├── static/
-    │   ├── description/
-    │   └── src/
-    │       └── js/
-    │           └── helpdesk_kanban.js
-    ├── views/
-    │   ├── helpdesk_category_views.xml
-    │   ├── helpdesk_ticket_views.xml
-    │   ├── helpdesk_timesheet_views.xml
-    │   └── menu.xml
-    └── wizard/
-        ├── __init__.py
-        ├── helpdesk_timesheet_export_wizard.py
-        └── helpdesk_timesheet_export_wizard_views.xml
-```
-
 ## 🛠️ Commandes Utiles
 
 🐳 Gestion des conteneurs Docker
