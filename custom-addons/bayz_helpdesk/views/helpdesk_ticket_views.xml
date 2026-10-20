@@ -152,6 +152,7 @@
                         name="is_manager" 
                         invisible="1"
                     />
+                    <field name="feedback_ids" invisible="1"/>
 
                     <header>
                         <button
@@ -212,6 +213,14 @@
                             type="object"
                             invisible="state not in ['new', 'assigned']"
                             groups="bayz_helpdesk.group_helpdesk_manager"
+                        />
+
+                        <button
+                            name="action_submit_feedback"
+                            string="Donner mon avis"
+                            type="object"
+                            invisible="state != 'closed' or not is_requester or feedback_ids"
+                            groups="bayz_helpdesk.group_helpdesk_user"
                         />
 
                         <field
@@ -294,6 +303,21 @@
                                         <field name="end_datetime"/>
                                         <field name="duration" 
                                             widget="float_time" sum="Total"/>
+                                    </list>
+                                </field>
+                            </page>
+
+                            <page
+                                string="Évaluation"
+                                name="feedback"
+                                groups="bayz_helpdesk.group_helpdesk_user"
+                            >
+                                <field name="feedback_ids" readonly="1">
+                                    <list create="false" delete="false" edit="false">
+                                        <field name="requester_id"/>
+                                        <field name="rating"/>
+                                        <field name="comment"/>
+                                        <field name="create_date"/>
                                     </list>
                                 </field>
                             </page>

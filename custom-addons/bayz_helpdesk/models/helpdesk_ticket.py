@@ -121,6 +121,12 @@ class HelpdeskTicket(models.Model):
         string="Feuilles de temps",
     )
 
+    feedback_ids = fields.One2many(
+        comodel_name="helpdesk.ticket.feedback",
+        inverse_name="ticket_id",
+        string="Évaluation",
+    )
+
     total_time = fields.Float(
         string="Temps total (heures)",
         compute="_compute_total_time",
@@ -437,6 +443,31 @@ class HelpdeskTicket(models.Model):
 
     def action_cancel(self):
         self._change_state("cancelled")
+
+    def action_submit_feedback(self):
+        self.ensure_one()
+        if self.state != "closed":
+            raise UserError(
+                _("Une évaluation ne peut être envoyée que pour un ticket fermé.")
+            )
+        if self.requester_id != self.env.user:
+            raise UserError(
+                _("Seul le demandeur du ticket peut envoyer une évaluation.")
+            )
+        if self.feedback_ids:
+            raise UserError(_("Une évaluation a déjà été envoyée pour ce ticket."))
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Évaluer le ticket"),
+            "res_model": "helpdesk.ticket.feedback",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_ticket_id": self.id,
+                "default_requester_id": self.requester_id.id,
+            },
+        }
 
     @api.model_create_multi
     def create(self, vals_list):
