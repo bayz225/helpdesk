@@ -6,7 +6,7 @@ import pytz
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 
@@ -55,7 +55,9 @@ class HelpdeskTimesheetExportWizard(models.TransientModel):
     def _check_dates(self):
         for wizard in self:
             if wizard.date_from and wizard.date_to and wizard.date_from > wizard.date_to:
-                raise ValidationError("La date de début doit être antérieure à la date de fin.")
+                raise ValidationError(
+                    _("La date de début doit être antérieure à la date de fin.")
+                )
 
     def _local_to_utc(self, day, at):
         """Date locale (fuseau de l'utilisateur) -> datetime UTC naïf."""
@@ -82,13 +84,13 @@ class HelpdeskTimesheetExportWizard(models.TransientModel):
 
         workbook = Workbook()
         sheet = workbook.active
-        sheet.title = "Statistiques"
+        sheet.title = _("Statistiques")
 
         sheet.append([
-            "Technicien",
-            "Nombre de tickets",
-            "Temps total (h)",
-            "Temps moyen / ticket (h)",
+            _("Technicien"),
+            _("Nombre de tickets"),
+            _("Temps total (h)"),
+            _("Temps moyen / ticket (h)"),
         ])
         for cell in sheet[1]:
             cell.font = Font(bold=True)
@@ -112,7 +114,9 @@ class HelpdeskTimesheetExportWizard(models.TransientModel):
         )
         self.write({
             "file_data": base64.b64encode(buffer.getvalue()),
-            "file_name": f"statistiques_techniciens{'_' + suffix if suffix else ''}.xlsx",
+            "file_name": (
+                f"{_('statistiques_techniciens')}{'_' + suffix if suffix else ''}.xlsx"
+            ),
         })
 
         return {

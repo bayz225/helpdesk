@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import _, models, fields, api
 from odoo.exceptions import UserError, ValidationError
 import re
 import unicodedata
@@ -6,14 +6,11 @@ import unicodedata
 class HelpdeskCategory(models.Model):
     _name = 'helpdesk.category'
     _description = 'Catégorie HelpDesk'
-    
-    _sql_constraints = [
-        (
-            "helpdesk_category_name_unique",
-            "UNIQUE(name)",
-            "Le nom de la catégorie doit être unique.",
-        ),
-    ]
+
+    _helpdesk_category_name_unique = models.Constraint(
+        "UNIQUE(name)",
+        "Le nom de la catégorie doit être unique.",
+    )
 
     name = fields.Char(string='Nom de la catégorie', required=True)
     active = fields.Boolean(string='Actif', default=True)
@@ -48,10 +45,11 @@ class HelpdeskCategory(models.Model):
 
             if duplicate:
                 raise ValidationError(
-                    "Une catégorie portant ce nom existe déjà."
+                    _("Une catégorie portant ce nom existe déjà.")
                 )
 
     def _normalize_category_name(self, name):
+        # Ignore les différences de casse, d'accents et d'espacement.
         name = name.strip()
         name = re.sub(r"\s+", " ", name)
         name = unicodedata.normalize("NFKD", name)
@@ -78,7 +76,7 @@ class HelpdeskCategory(models.Model):
 
         if not is_manager and {"name", "active"} & set(vals):
             raise UserError(
-                "Seul le responsable peut modifier une catégorie."
+                _("Seul le responsable peut modifier une catégorie.")
             )
 
         return super().write(vals)

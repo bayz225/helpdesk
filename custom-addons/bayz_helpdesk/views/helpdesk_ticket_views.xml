@@ -152,6 +152,7 @@
                         name="is_manager" 
                         invisible="1"
                     />
+                    <field name="feedback_ids" invisible="1"/>
 
                     <header>
                         <button
@@ -214,6 +215,14 @@
                             groups="bayz_helpdesk.group_helpdesk_manager"
                         />
 
+                        <button
+                            name="action_submit_feedback"
+                            string="Donner mon avis"
+                            type="object"
+                            invisible="state != 'closed' or not is_requester or feedback_ids"
+                            groups="bayz_helpdesk.group_helpdesk_user"
+                        />
+
                         <field
                             name="state"
                             widget="statusbar"
@@ -246,12 +255,12 @@
                                 <field
                                     name="technician_id"
                                     domain="[('id', 'in', technician_domain_ids)]"
-                                    readonly="not is_manager or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
+                                    readonly="not category_id or not is_manager or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
 
                                 <field
                                     name="category_id"
-                                    readonly="(not is_manager and not is_requester) or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
+                                    readonly="(not is_manager and not is_requester) or not name or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
                             </group>
 
@@ -259,7 +268,7 @@
                                 <field
                                     name="priority"
                                     widget="priority"
-                                    readonly="not is_manager or state in ['in_progress', 'resolved', 'closed', 'cancelled']"
+                                    readonly="not is_manager or not name or not category_id or state in ['in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
 
                                 <field
@@ -294,6 +303,21 @@
                                         <field name="end_datetime"/>
                                         <field name="duration" 
                                             widget="float_time" sum="Total"/>
+                                    </list>
+                                </field>
+                            </page>
+
+                            <page
+                                string="Évaluation"
+                                name="feedback"
+                                groups="bayz_helpdesk.group_helpdesk_user"
+                            >
+                                <field name="feedback_ids" readonly="1">
+                                    <list create="false" delete="false" edit="false">
+                                        <field name="requester_id"/>
+                                        <field name="rating"/>
+                                        <field name="comment"/>
+                                        <field name="create_date"/>
                                     </list>
                                 </field>
                             </page>

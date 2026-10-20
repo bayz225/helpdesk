@@ -1,4 +1,4 @@
-from odoo import models, fields, api
+from odoo import _, models, fields, api
 from odoo.exceptions import ValidationError
 
 class HelpdeskTimesheet(models.Model):
@@ -44,11 +44,12 @@ class HelpdeskTimesheet(models.Model):
         for record in self:
             if record.end_datetime and record.end_datetime < record.start_datetime:
                 raise ValidationError(
-                    "L'heure de fin d'une session doit être postérieure ou égale à l'heure de début."
+                    _("L'heure de fin d'une session doit être postérieure ou égale à l'heure de début.")
                 )
 
     @api.depends('start_datetime', 'end_datetime')
     def _compute_duration(self):
+        # Stocke la durée en heures décimales.
         for record in self:
             if record.start_datetime and record.end_datetime:
                 diff = record.end_datetime - record.start_datetime
@@ -58,6 +59,7 @@ class HelpdeskTimesheet(models.Model):
 
     @api.model
     def get_technician_stats(self, domain=None):
+        # Une ligne par technicien et ticket pour calculer la moyenne par ticket.
         groups = self._read_group(
             domain=domain or [],
             groupby=["technician_id", "ticket_id"],

@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 
@@ -10,7 +10,7 @@ class HelpdeskTicket(models.Model):
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _order = "create_date desc, priority desc"
     
-    # Workflow de l'etat d'un ticket
+    # Transitions permises et rôles autorisés pour chaque transition.
     ALLOWED_TRANSITIONS = {
         "new": ["assigned", "cancelled"],
         "assigned": ["in_progress", "cancelled"],
@@ -43,7 +43,7 @@ class HelpdeskTicket(models.Model):
         required=True,
         readonly=True,
         copy=False,
-        default='Nouveau'
+        default=lambda self: _("Nouveau")
     )
 
     # Informations générales
@@ -121,6 +121,12 @@ class HelpdeskTicket(models.Model):
         string="Feuilles de temps",
     )
 
+    feedback_ids = fields.One2many(
+        comodel_name="helpdesk.ticket.feedback",
+        inverse_name="ticket_id",
+        string="Évaluation",
+    )
+
     total_time = fields.Float(
         string="Temps total (heures)",
         compute="_compute_total_time",
@@ -192,6 +198,7 @@ class HelpdeskTicket(models.Model):
 
     @api.depends("priority", "create_date", "reopened_date")
     def _compute_deadline(self):
+        # À la réouverture, le délai repart de reopened_date.
         for ticket in self:
             base_date = ticket.reopened_date or ticket.create_date or fields.Datetime.now()
 
@@ -268,7 +275,7 @@ class HelpdeskTicket(models.Model):
     def _search_is_overdue(self, operator, value):
         if operator not in ("=", "!="):
             raise UserError(
-                "L'opérateur utilisé pour « En retard » n'est pas supporté."
+                _("L'opérateur utilisé pour « En retard » n'est pas supporté.")
             )
 
         now = fields.Datetime.now()
@@ -331,7 +338,8 @@ class HelpdeskTicket(models.Model):
         for ticket in self:
             if not ticket.requester_id.partner_id.email:
                 raise UserError(
-                    f"Le demandeur du ticket '{ticket.name}' n'a pas d'adresse e-mail."
+                    _("Le demandeur du ticket « %(ticket)s » n'a pas d'adresse e-mail.")
+                    % {"ticket": ticket.name}
                 )
             
             template.send_mail(
@@ -353,12 +361,12 @@ class HelpdeskTicket(models.Model):
 
             if new_state not in self.ALLOWED_TRANSITIONS[current_state]:
                 raise UserError(
-                    "Cette transition n'est pas autorisée."
+                    _("Cette transition n'est pas autorisée.")
                 )
 
             if transition not in self.ALLOWED_TRANS_ROLES:
                 raise UserError(
-                    "Aucune règle de permission n'est définie pour cette transition."
+                    _("Aucune règle de permission n'est définie pour cette transition.")
                 )
 
             allowed_roles = self.ALLOWED_TRANS_ROLES[transition]
@@ -375,7 +383,7 @@ class HelpdeskTicket(models.Model):
 
             if not can_change_state:
                 raise UserError(
-                    "Vous n'avez pas les droits nécessaires pour effectuer cette transition."
+                    _("Vous n'avez pas les droits nécessaires pour effectuer cette transition.")
                 )
 
     # Methode permetante de modifier le state du ticket avec le nouveau state "new_state"
@@ -403,7 +411,8 @@ class HelpdeskTicket(models.Model):
             if current_state == 'in_progress' and new_state != 'in_progress':
                 ticket._stop_work_session()
             
-            ticket._send_state_notification()
+            if current_state != new_state:
+                ticket._send_state_notification()
 
     def action_assign(self):
         for ticket in self:
@@ -435,10 +444,35 @@ class HelpdeskTicket(models.Model):
     def action_cancel(self):
         self._change_state("cancelled")
 
+    def action_submit_feedback(self):
+        self.ensure_one()
+        if self.state != "closed":
+            raise UserError(
+                _("Une évaluation ne peut être envoyée que pour un ticket fermé.")
+            )
+        if self.requester_id != self.env.user:
+            raise UserError(
+                _("Seul le demandeur du ticket peut envoyer une évaluation.")
+            )
+        if self.feedback_ids:
+            raise UserError(_("Une évaluation a déjà été envoyée pour ce ticket."))
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Évaluer le ticket"),
+            "res_model": "helpdesk.ticket.feedback",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_ticket_id": self.id,
+                "default_requester_id": self.requester_id.id,
+            },
+        }
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if vals.get('reference', 'Nouveau') == 'Nouveau':
+            if vals.get('reference', _("Nouveau")) == _("Nouveau"):
                 vals['reference'] = self.env['ir.sequence'].next_by_code('helpdesk.ticket')
             
         return super().create(vals_list)
@@ -456,20 +490,19 @@ class HelpdeskTicket(models.Model):
         if "state" in vals:
             if not self.env.context.get("allow_state_change"):
                 raise UserError(
-                    "L'état d'un ticket ne peut être modifié que par une action du workflow."
+                    _("L'état d'un ticket ne peut être modifié que par une action du workflow.")
                 )
         
         if "reopened_date" in vals:
             if not self.env.context.get("allow_reopen_date_change"):
                 raise UserError(
-                    "La date de réouverture ne peut être modifiée "
-                    "que par le workflow."
+                    _("La date de réouverture ne peut être modifiée que par le workflow.")
                 )
         
         # Le demandeur d'un ticket ne peut jamais être modifié
         if "requester_id" in vals: 
             raise UserError( 
-                    "Le demandeur d'un ticket ne peut pas être modifié." 
+                    _("Le demandeur d'un ticket ne peut pas être modifié.")
                 )
         
         # Règles de modification des champs
@@ -553,13 +586,15 @@ class HelpdeskTicket(models.Model):
                 # Droit fonctionnel
                 if not roles.intersection(rules["roles"]):
                     raise UserError(
-                        f"Vous n'avez pas les droits nécessaires pour modifier le champ '{field_name}'."
+                        _("Vous n'avez pas les droits nécessaires pour modifier le champ « %(field)s ».")
+                        % {"field": field_name}
                     )
                 
                 # Verrouillage selon l'état
                 if ticket.state in rules["forbidden_states"]:
                     raise UserError(
-                        f"Le champ '{field_name}' ne peut pas être modifié dans l'état actuel du ticket."
+                        _("Le champ « %(field)s » ne peut pas être modifié dans l'état actuel du ticket.")
+                        % {"field": field_name}
                     )
                     
                 if field_name == "technician_id":

@@ -125,6 +125,47 @@
                 [(1, '=', 1)]
             </field>
         </record>
+
+        <!-- =====================================================
+             RÈGLES D'ACCÈS AUX ÉVALUATIONS
+             ===================================================== -->
+
+        <record id="rule_helpdesk_ticket_feedback_user" model="ir.rule">
+            <field name="name">
+                HelpDesk : Évaluations des tickets de l'utilisateur
+            </field>
+            <field name="model_id" ref="model_helpdesk_ticket_feedback"/>
+            <field name="groups"
+                   eval="[(4, ref('bayz_helpdesk.group_helpdesk_user'))]"/>
+            <field name="domain_force">
+                [('ticket_id.requester_id', '=', user.id)]
+            </field>
+        </record>
+
+        <record id="rule_helpdesk_ticket_feedback_technician" model="ir.rule">
+            <field name="name">
+                HelpDesk : Évaluations des tickets du technicien
+            </field>
+            <field name="model_id" ref="model_helpdesk_ticket_feedback"/>
+            <field name="groups"
+                   eval="[(4, ref('bayz_helpdesk.group_helpdesk_technician'))]"/>
+            <field name="domain_force">
+                ['|',
+                    ('ticket_id.technician_id', '=', user.id),
+                    ('ticket_id.requester_id', '=', user.id)
+                ]
+            </field>
+        </record>
+
+        <record id="rule_helpdesk_ticket_feedback_manager" model="ir.rule">
+            <field name="name">
+                HelpDesk : Toutes les évaluations du responsable
+            </field>
+            <field name="model_id" ref="model_helpdesk_ticket_feedback"/>
+            <field name="groups"
+                   eval="[(4, ref('bayz_helpdesk.group_helpdesk_manager'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
         
     </data>
 </odoo>

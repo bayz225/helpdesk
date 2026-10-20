@@ -28,6 +28,7 @@
         # 2. Vues de l'interface
         'views/menu.xml',
         'views/helpdesk_ticket_views.xml',
+        'views/helpdesk_ticket_feedback_views.xml',
         'views/helpdesk_category_views.xml',
         'views/helpdesk_timesheet_views.xml',
         
@@ -49,4 +50,3 @@
     'application': True, # Permet au module d'apparaître dans l'écran principal des Apps
     'license': 'LGPL-3',
 }
-
