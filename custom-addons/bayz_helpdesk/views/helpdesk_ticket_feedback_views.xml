@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_helpdesk_ticket_feedback_form" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.feedback.form</field>
+            <field name="model">helpdesk.ticket.feedback</field>
+            <field name="arch" type="xml">
+                <form string="Évaluer le ticket">
+                    <group>
+                        <field name="ticket_id"/>
+                        <field name="requester_id"/>
+                        <field name="rating" widget="radio"/>
+                        <field name="comment" placeholder="Votre commentaire (facultatif)"/>
+                    </group>
+                    <footer>
+                        <button
+                            string="Envoyer"
+                            type="object"
+                            name="action_submit"
+                            class="btn-primary"
+                        />
+                        <button string="Annuler" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

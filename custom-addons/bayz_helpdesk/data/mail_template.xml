@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+    <record id="mail_template_helpdesk_ticket_update" model="mail.template">
+
+        <field name="name">HelpDesk - Mise à jour du ticket</field>
+
+        <field name="model_id" ref="model_helpdesk_ticket"/>
+
+        <field name="subject">Mise à jour de votre ticket : {{ object.name }}</field>
+
+        <field name="email_from">HelpDesk &lt;helpdesk@entreprise.com&gt;</field>
+
+        <field name="email_to"></field>
+
+        <field name="reply_to">{{ object.technician_id.partner_id.email_formatted or 'helpdesk@entreprise.com' }}</field>
+
+        <field name="partner_to">{{ object.requester_id.partner_id.id }}</field>
+
+        <field name="use_default_to" eval="False"/>
+
+        <field name="body_html" type="html">
+
+            <!-- Couleur du badge selon l'état -->
+            <t t-set="state_colors" t-value="{
+                'new': '#6c757d',
+                'assigned': '#0d6efd',
+                'in_progress': '#0dcaf0',
+                'pending': '#fd7e14',
+                'resolved': '#198754',
+                'closed': '#495057',
+                'reopened': '#d63384',
+                'cancelled': '#dc3545',
+            }"/>
+            <t t-set="state_color" t-value="state_colors.get(object.state, '#6c757d')"/>
+
+            <div style="margin: 0; padding: 24px 12px; background-color: #f4f5f7; font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #333333;">
+
+                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e3e6ea; border-radius: 8px; overflow: hidden;">
+
+                    <!-- En-tête -->
+                    <div style="padding: 18px 24px; background-color: #714b67; color: #ffffff;">
+                        <div style="font-size: 12px; letter-spacing: 1px; text-transform: uppercase; opacity: 0.85;">
+                            HelpDesk
+                        </div>
+                        <div style="font-size: 20px; font-weight: bold; margin-top: 4px;">
+                            Ticket <t t-out="object.reference"/>
+                        </div>
+                    </div>
+
+                    <!-- Contenu -->
+                    <div style="padding: 24px; line-height: 1.6;">
+
+                        <p style="margin: 0 0 16px 0;">
+                            Bonjour
+                            <strong>
+                                <t t-out="object.requester_id.name"/>
+                            </strong>,
+                        </p>
+
+                        <p style="margin: 0 0 16px 0;">
+                            L'état de votre ticket
+                            <strong>
+                                <t t-out="object.reference"/>
+                            </strong>
+                            a été mis à jour.
+                        </p>
+
+                        <!-- Bloc récapitulatif -->
+                        <div style="margin: 0 0 20px 0; padding: 14px 16px; background-color: #f8f9fa; border-left: 4px solid; border-radius: 4px;"
+                             t-attf-style="margin: 0 0 20px 0; padding: 14px 16px; background-color: #f8f9fa; border-left: 4px solid {{ state_color }}; border-radius: 4px;">
+                            <div style="font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Ticket
+                            </div>
+                            <div style="font-size: 15px; font-weight: bold; margin: 2px 0 12px 0;">
+                                <t t-out="object.name"/>
+                            </div>
+
+                            <strong>Nouvel état :</strong>
+                            <span style="display: inline-block; margin-left: 6px; padding: 3px 12px; border-radius: 12px; color: #ffffff; font-size: 12px; font-weight: bold;"
+                                  t-attf-style="display: inline-block; margin-left: 6px; padding: 3px 12px; border-radius: 12px; background-color: {{ state_color }}; color: #ffffff; font-size: 12px; font-weight: bold;">
+                                <t t-out="dict(
+                                    object._fields['state'].selection
+                                ).get(object.state, object.state)"/>
+                            </span>
+                        </div>
+
+                        <p style="margin: 0 0 16px 0;">
+                            <t t-if="object.state == 'assigned'"> Un technicien a été affecté à votre demande. </t>
+                            <t t-elif="object.state == 'in_progress'"> Votre demande est actuellement prise en charge. </t>
+                            <t t-elif="object.state == 'pending'"> Le traitement de votre demande est temporairement suspendu. </t>
+                            <t t-elif="object.state == 'reopened'"> Votre demande a été réouverte et va être de nouveau prise en charge. </t>
+                            <t t-elif="object.state == 'resolved'"> Votre demande a été traitée et est considérée comme résolue. </t>
+                            <t t-elif="object.state == 'closed'"> Votre demande a été définitivement clôturée. </t>
+                            <t t-elif="object.state == 'cancelled'"> Votre demande a été annulée. </t>
+                        </p>
+
+                        <p style="margin: 0 0 24px 0;">
+                            Vous pouvez suivre l'évolution de votre demande
+                            depuis votre espace HelpDesk.
+                        </p>
+
+                        <p style="margin: 0; padding-top: 16px; border-top: 1px solid #e3e6ea;">
+                            Cordialement,<br/>
+                            <strong>
+                                <t t-out="user.name"/>
+                            </strong>
+                        </p>
+
+                    </div>
+
+                    <!-- Pied de message -->
+                    <div style="padding: 12px 24px; background-color: #f8f9fa; border-top: 1px solid #e3e6ea; font-size: 12px; color: #6c757d; text-align: center;">
+                        Message automatique envoyé par HelpDesk.
+                    </div>
+
+                </div>
+            </div>
+
+        </field>
+
+        <field name="auto_delete" eval="True"/>
+
+    </record>
+</odoo>

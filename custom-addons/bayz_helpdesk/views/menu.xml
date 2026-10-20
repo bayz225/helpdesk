@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+            id="menu_helpdesk_root"
+            name="HelpDesk"
+            sequence="10"
+            web_icon="bayz_helpdesk,static/description/icon.png"
+        />
+
+    <menuitem
+            id="menu_helpdesk_ticket_master"
+            name="Tickets"
+            parent="menu_helpdesk_root"
+            sequence="10"
+            groups="bayz_helpdesk.group_helpdesk_user"
+        />
+
+    <menuitem
+            id="menu_helpdesk_reporting_master"
+            name="Reporting"
+            parent="menu_helpdesk_root"
+            sequence="30"
+            groups="bayz_helpdesk.group_helpdesk_manager"
+        />
+
+    <menuitem
+            id="menu_helpdesk_parameter_master"
+            name="Paramètres"
+            parent="menu_helpdesk_root"
+            sequence="50"
+            groups="bayz_helpdesk.group_helpdesk_technician"
+        />
+</odoo>

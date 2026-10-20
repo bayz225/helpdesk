@@ -15,8 +15,12 @@ services:
 
   odoo:
     user: root
-    image: odoo:${ODOO_VERSION}
+    build:
+      context: .
+      args:
+        ODOO_VERSION: ${ODOO_VERSION}
     container_name: ${ODOO_CONTAINER_NAME}
+    image: odoo:${ODOO_VERSION}
     restart: always
     depends_on:
       - db
@@ -29,6 +33,14 @@ services:
       - ${ENTREPRISE_PATH}:/mnt/entreprise-addons
       - ./requirements.txt:/mnt/requirements.txt:ro
     command: odoo -c /etc/odoo/odoo.conf --dev xml,qweb
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
 
 volumes:
   odoo_helpdesk_web_datas:

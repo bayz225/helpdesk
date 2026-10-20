@@ -18,13 +18,31 @@
         'mail' # Requis pour le chatter et les activités
     ],
     'data': [
+        'data/mail_template.xml',
         # 1. Sécurité
         'security/helpdesk_security.xml',
         'security/ir.model.access.csv',
         
+        "data/ir_sequence.xml",
+        
         # 2. Vues de l'interface
+        'views/menu.xml',
         'views/helpdesk_ticket_views.xml',
+        'views/helpdesk_ticket_feedback_views.xml',
+        'views/helpdesk_category_views.xml',
+        'views/helpdesk_timesheet_views.xml',
+        
+        # 3. Wizard
+        'wizard/helpdesk_timesheet_export_wizard_views.xml',
     ],
+    "assets": {
+        "web.assets_backend": [
+            "bayz_helpdesk/static/src/js/helpdesk_kanban.js",
+        ],
+    },
+    'external_dependencies': {
+        'python': ['openpyxl']
+    },
     'demo': [
         'demo/demo.xml',
     ],
@@ -32,4 +50,3 @@
     'application': True, # Permet au module d'apparaître dans l'écran principal des Apps
     'license': 'LGPL-3',
 }
-

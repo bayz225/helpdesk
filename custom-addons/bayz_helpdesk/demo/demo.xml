@@ -1,30 +1,94 @@
 <odoo>
-    <data>
-<!--
-          <record id="object0" model="om_odoo_inheritence.om_odoo_inheritence">
-            <field name="name">Object 0</field>
-            <field name="value">0</field>
-          </record>
+  <data noupdate="1">
+    <record id="category_demo_hardware" model="helpdesk.category">
+      <field name="name">Matériel</field>
+    </record>
+    <record id="category_demo_software" model="helpdesk.category">
+      <field name="name">Logiciel</field>
+    </record>
+    <record id="category_demo_access" model="helpdesk.category">
+      <field name="name">Accès et comptes</field>
+    </record>
 
-          <record id="object1" model="om_odoo_inheritence.om_odoo_inheritence">
-            <field name="name">Object 1</field>
-            <field name="value">10</field>
-          </record>
+    <record id="user_demo_requester" model="res.users">
+      <field name="name">Camille Martin (Démo)</field>
+      <field name="login">camille.demo</field>
+      <field name="password">demo</field>
+      <field name="email">camille.demo@example.invalid</field>
+      <field name="group_ids" eval="[(6, 0, [ref('base.group_user'), ref('bayz_helpdesk.group_helpdesk_user')])]"/>
+    </record>
+    <record id="user_demo_requester_2" model="res.users">
+      <field name="name">Alex Bernard (Démo)</field>
+      <field name="login">alex.demo</field>
+      <field name="password">demo</field>
+      <field name="email">alex.demo@example.invalid</field>
+      <field name="group_ids" eval="[(6, 0, [ref('base.group_user'), ref('bayz_helpdesk.group_helpdesk_user')])]"/>
+    </record>
+    <record id="user_demo_technician" model="res.users">
+      <field name="name">Samira Diallo (Technicienne démo)</field>
+      <field name="login">samira.tech.demo</field>
+      <field name="password">demo</field>
+      <field name="email">samira.tech.demo@example.invalid</field>
+      <field name="group_ids" eval="[(6, 0, [ref('base.group_user'), ref('bayz_helpdesk.group_helpdesk_technician')])]"/>
+    </record>
+    <record id="user_demo_technician_2" model="res.users">
+      <field name="name">Nicolas Petit (Technicien démo)</field>
+      <field name="login">nicolas.tech.demo</field>
+      <field name="password">demo</field>
+      <field name="email">nicolas.tech.demo@example.invalid</field>
+      <field name="group_ids" eval="[(6, 0, [ref('base.group_user'), ref('bayz_helpdesk.group_helpdesk_technician')])]"/>
+    </record>
+    <record id="user_demo_manager" model="res.users">
+      <field name="name">Morgan Leroy (Responsable démo)</field>
+      <field name="login">morgan.manager.demo</field>
+      <field name="password">demo</field>
+      <field name="email">morgan.manager.demo@example.invalid</field>
+      <field name="group_ids" eval="[(6, 0, [ref('base.group_user'), ref('bayz_helpdesk.group_helpdesk_manager')])]"/>
+    </record>
 
-          <record id="object2" model="om_odoo_inheritence.om_odoo_inheritence">
-            <field name="name">Object 2</field>
-            <field name="value">20</field>
-          </record>
-
-          <record id="object3" model="om_odoo_inheritence.om_odoo_inheritence">
-            <field name="name">Object 3</field>
-            <field name="value">30</field>
-          </record>
-
-          <record id="object4" model="om_odoo_inheritence.om_odoo_inheritence">
-            <field name="name">Object 4</field>
-            <field name="value">40</field>
-          </record>
--->
-    </data>
+    <record id="ticket_demo_new" model="helpdesk.ticket">
+      <field name="name">Écran externe non détecté</field>
+      <field name="description">Le poste ne détecte plus le second écran après redémarrage.</field>
+      <field name="requester_id" ref="user_demo_requester"/>
+      <field name="category_id" ref="category_demo_hardware"/>
+      <field name="priority">2</field>
+      <field name="state">new</field>
+    </record>
+    <record id="ticket_demo_assigned" model="helpdesk.ticket">
+      <field name="name">Installation d'un outil de visioconférence</field>
+      <field name="description">Demande d'installation et de configuration sur le poste de travail.</field>
+      <field name="requester_id" ref="user_demo_requester_2"/>
+      <field name="technician_id" ref="user_demo_technician"/>
+      <field name="category_id" ref="category_demo_software"/>
+      <field name="priority">1</field>
+      <field name="state">assigned</field>
+    </record>
+    <record id="ticket_demo_in_progress" model="helpdesk.ticket">
+      <field name="name">Accès au dossier partagé de l'équipe</field>
+      <field name="description">L'accès au dossier partagé est refusé depuis le changement d'équipe.</field>
+      <field name="requester_id" ref="user_demo_requester"/>
+      <field name="technician_id" ref="user_demo_technician_2"/>
+      <field name="category_id" ref="category_demo_access"/>
+      <field name="priority">3</field>
+      <field name="state">in_progress</field>
+    </record>
+    <record id="ticket_demo_pending" model="helpdesk.ticket">
+      <field name="name">Ordinateur portable très lent</field>
+      <field name="description">Diagnostic en attente des informations de l'utilisateur.</field>
+      <field name="requester_id" ref="user_demo_requester_2"/>
+      <field name="technician_id" ref="user_demo_technician"/>
+      <field name="category_id" ref="category_demo_hardware"/>
+      <field name="priority">2</field>
+      <field name="state">pending</field>
+    </record>
+    <record id="ticket_demo_resolved" model="helpdesk.ticket">
+      <field name="name">Réinitialisation du mot de passe</field>
+      <field name="description">Le compte a été réactivé et le mot de passe réinitialisé.</field>
+      <field name="requester_id" ref="user_demo_requester"/>
+      <field name="technician_id" ref="user_demo_technician_2"/>
+      <field name="category_id" ref="category_demo_access"/>
+      <field name="priority">0</field>
+      <field name="state">resolved</field>
+    </record>
+  </data>
 </odoo>

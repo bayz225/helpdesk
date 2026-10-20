@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 
@@ -8,13 +8,14 @@ class HelpdeskTicket(models.Model):
     _name = "helpdesk.ticket"
     _description = "Ticket HelpDesk"
     _inherit = ["mail.thread", "mail.activity.mixin"]
+    _order = "create_date desc, priority desc"
     
-    # Workflow de l'etat d'un ticket
+    # Transitions permises et rôles autorisés pour chaque transition.
     ALLOWED_TRANSITIONS = {
         "new": ["assigned", "cancelled"],
         "assigned": ["in_progress", "cancelled"],
         "in_progress": ["pending", "resolved"],
-        "pending": ["in_progress", "resolved"],
+        "pending": ["in_progress", "resolved", "assigned"],
         "resolved": ["closed", "reopened"],
         "closed": ["reopened"],
         "reopened": ["assigned"],
@@ -30,11 +31,20 @@ class HelpdeskTicket(models.Model):
         ("in_progress", "resolved"): ["manager", "technician"],
         ("pending", "in_progress"): ["manager", "technician"],
         ("pending", "resolved"): ["manager", "technician"],
+        ("pending", "assigned"): ["manager"],
         ("resolved", "closed"): ["manager"],
         ("resolved", "reopened"): ["manager"],
         ("closed", "reopened"): ["manager"],
         ("reopened", "assigned"): ["manager"],
     }
+
+    reference = fields.Char(
+        string="Référence",
+        required=True,
+        readonly=True,
+        copy=False,
+        default=lambda self: _("Nouveau")
+    )
 
     # Informations générales
     name = fields.Char(
@@ -83,6 +93,7 @@ class HelpdeskTicket(models.Model):
         string="État",
         default="new",
         tracking=True,
+        group_expand=True,
     )
 
     priority = fields.Selection(
@@ -108,6 +119,12 @@ class HelpdeskTicket(models.Model):
         comodel_name="helpdesk.timesheet",
         inverse_name="ticket_id",
         string="Feuilles de temps",
+    )
+
+    feedback_ids = fields.One2many(
+        comodel_name="helpdesk.ticket.feedback",
+        inverse_name="ticket_id",
+        string="Évaluation",
     )
 
     total_time = fields.Float(
@@ -136,13 +153,31 @@ class HelpdeskTicket(models.Model):
     is_manager = fields.Boolean(
         string="Est responsable",
         compute="_compute_is_manager",
-)
+    )
     
     reopened_date = fields.Datetime(
-    string="Date de réouverture",
-    readonly=True,
-    copy=False,
-)
+        string="Date de réouverture",
+        readonly=True,
+        copy=False,
+    )
+    
+    is_overdue = fields.Boolean(
+        string="En retard",
+        compute="_compute_is_overdue",
+        search="_search_is_overdue",
+    )
+    
+    times_by_technician = fields.Float(
+        string="Temps passé par technicien",
+        compute="_compute_time_by_technician",
+        store=True
+    )
+    
+    time_by_category = fields.Float(
+        string="Temps par catégorie",
+        compute="_compute_time_by_category",
+        store=True,
+    )
 
     @api.depends_context("uid")
     def _compute_technician_domain_ids(self):
@@ -163,6 +198,7 @@ class HelpdeskTicket(models.Model):
 
     @api.depends("priority", "create_date", "reopened_date")
     def _compute_deadline(self):
+        # À la réouverture, le délai repart de reopened_date.
         for ticket in self:
             base_date = ticket.reopened_date or ticket.create_date or fields.Datetime.now()
 
@@ -205,6 +241,61 @@ class HelpdeskTicket(models.Model):
                 ticket.timesheet_ids.mapped("duration")
             )
 
+    @api.depends("technician_id", "timesheet_ids.duration", "timesheet_ids.technician_id")
+    def _compute_time_by_technician(self):
+        for ticket in self:
+            if ticket.technician_id:
+                matching_ligne = ticket.timesheet_ids.filtered(
+                    lambda l: l.technician_id == ticket.technician_id
+                )
+                ticket.times_by_technician = sum(matching_ligne.mapped('duration'))
+            else:
+                ticket.times_by_technician = 0.0
+
+    @api.depends("category_id", "total_time")
+    def _compute_time_by_category(self):
+        for ticket in self:
+            # Filtrer sur tout le recordset 'self'
+            matching = self.filtered(lambda t: t.category_id == ticket.category_id)
+            ticket.time_by_category = sum(matching.mapped("total_time"))
+
+    # Verifier les tickets dont la deadline est dépassé
+    @api.depends('state', 'deadline')
+    def _compute_is_overdue(self):
+        now = fields.Datetime.now()
+        
+        for ticket in self:
+            ticket.is_overdue = bool(
+                ticket.deadline
+                and ticket.deadline < now
+                and ticket.state not in ['resolved', 'closed', 'cancelled']
+            )
+
+    # Verifier les tickets dont la deadline est dépassé (Search)
+    def _search_is_overdue(self, operator, value):
+        if operator not in ("=", "!="):
+            raise UserError(
+                _("L'opérateur utilisé pour « En retard » n'est pas supporté.")
+            )
+
+        now = fields.Datetime.now()
+
+        overdue_domain = [
+            ("deadline", "<", now),
+            ("state", "not in", [
+                "resolved",
+                "closed",
+                "cancelled",
+            ]),
+        ]
+
+        if (operator == "=" and value) or (
+            operator == "!=" and not value
+        ):
+            return overdue_domain
+
+        return ["!"] + overdue_domain
+
     # Marque le début d'une session
     def _start_work_session(self):
         for ticket in self:
@@ -231,8 +322,32 @@ class HelpdeskTicket(models.Model):
                     'end_datetime': fields.Datetime.now()
                 })
 
-    # Methode permetante de modifier le state du ticket avec le nouveau state "new_state"
-    def _change_state(self, new_state):
+    def action_kanban_change_state(self, new_state):
+        self._change_state(new_state)
+
+    # Envoyer un email lors du changement d'état
+    def _send_state_notification(self):
+        template = self.env.ref(
+            "bayz_helpdesk.mail_template_helpdesk_ticket_update",
+            raise_if_not_found=False,
+        )
+
+        if not template:
+            return
+
+        for ticket in self:
+            if not ticket.requester_id.partner_id.email:
+                raise UserError(
+                    _("Le demandeur du ticket « %(ticket)s » n'a pas d'adresse e-mail.")
+                    % {"ticket": ticket.name}
+                )
+            
+            template.send_mail(
+                ticket.id,
+                force_send=True,
+            )
+
+    def _check_state_transition(self, new_state):
         is_manager = self.env.user.has_group(
             "bayz_helpdesk.group_helpdesk_manager"
         )
@@ -246,12 +361,12 @@ class HelpdeskTicket(models.Model):
 
             if new_state not in self.ALLOWED_TRANSITIONS[current_state]:
                 raise UserError(
-                    "Cette transition n'est pas autorisée."
+                    _("Cette transition n'est pas autorisée.")
                 )
 
             if transition not in self.ALLOWED_TRANS_ROLES:
                 raise UserError(
-                    "Aucune règle de permission n'est définie pour cette transition."
+                    _("Aucune règle de permission n'est définie pour cette transition.")
                 )
 
             allowed_roles = self.ALLOWED_TRANS_ROLES[transition]
@@ -268,8 +383,15 @@ class HelpdeskTicket(models.Model):
 
             if not can_change_state:
                 raise UserError(
-                    "Vous n'avez pas les droits nécessaires pour effectuer cette transition."
+                    _("Vous n'avez pas les droits nécessaires pour effectuer cette transition.")
                 )
+
+    # Methode permetante de modifier le state du ticket avec le nouveau state "new_state"
+    def _change_state(self, new_state):
+        self._check_state_transition(new_state)
+        
+        for ticket in self:
+            current_state = ticket.state
             
             values = {
                 "state": new_state
@@ -288,6 +410,9 @@ class HelpdeskTicket(models.Model):
             
             if current_state == 'in_progress' and new_state != 'in_progress':
                 ticket._stop_work_session()
+            
+            if current_state != new_state:
+                ticket._send_state_notification()
 
     def action_assign(self):
         for ticket in self:
@@ -319,6 +444,39 @@ class HelpdeskTicket(models.Model):
     def action_cancel(self):
         self._change_state("cancelled")
 
+    def action_submit_feedback(self):
+        self.ensure_one()
+        if self.state != "closed":
+            raise UserError(
+                _("Une évaluation ne peut être envoyée que pour un ticket fermé.")
+            )
+        if self.requester_id != self.env.user:
+            raise UserError(
+                _("Seul le demandeur du ticket peut envoyer une évaluation.")
+            )
+        if self.feedback_ids:
+            raise UserError(_("Une évaluation a déjà été envoyée pour ce ticket."))
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Évaluer le ticket"),
+            "res_model": "helpdesk.ticket.feedback",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_ticket_id": self.id,
+                "default_requester_id": self.requester_id.id,
+            },
+        }
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get('reference', _("Nouveau")) == _("Nouveau"):
+                vals['reference'] = self.env['ir.sequence'].next_by_code('helpdesk.ticket')
+            
+        return super().create(vals_list)
+
     def write(self, vals):
         # Rôles de l'utilisateur connecté
         is_manager = self.env.user.has_group(
@@ -332,20 +490,19 @@ class HelpdeskTicket(models.Model):
         if "state" in vals:
             if not self.env.context.get("allow_state_change"):
                 raise UserError(
-                    "L'état d'un ticket ne peut être modifié que par une action du workflow."
+                    _("L'état d'un ticket ne peut être modifié que par une action du workflow.")
                 )
         
         if "reopened_date" in vals:
             if not self.env.context.get("allow_reopen_date_change"):
                 raise UserError(
-                    "La date de réouverture ne peut être modifiée "
-                    "que par le workflow."
+                    _("La date de réouverture ne peut être modifiée que par le workflow.")
                 )
         
         # Le demandeur d'un ticket ne peut jamais être modifié
         if "requester_id" in vals: 
             raise UserError( 
-                    "Le demandeur d'un ticket ne peut pas être modifié." 
+                    _("Le demandeur d'un ticket ne peut pas être modifié.")
                 )
         
         # Règles de modification des champs
@@ -429,14 +586,22 @@ class HelpdeskTicket(models.Model):
                 # Droit fonctionnel
                 if not roles.intersection(rules["roles"]):
                     raise UserError(
-                        f"Vous n'avez pas les droits nécessaires pour modifier le champ '{field_name}'."
+                        _("Vous n'avez pas les droits nécessaires pour modifier le champ « %(field)s ».")
+                        % {"field": field_name}
                     )
                 
                 # Verrouillage selon l'état
                 if ticket.state in rules["forbidden_states"]:
                     raise UserError(
-                        f"Le champ '{field_name}' ne peut pas être modifié dans l'état actuel du ticket."
+                        _("Le champ « %(field)s » ne peut pas être modifié dans l'état actuel du ticket.")
+                        % {"field": field_name}
                     )
+                    
+                if field_name == "technician_id":
+                    new_technician_id = vals.get("technician_id")
+                    
+                    if ticket.technician_id.id != new_technician_id:
+                        self._change_state('assigned')
         
         # Écriture réelle
         return super().write(vals)

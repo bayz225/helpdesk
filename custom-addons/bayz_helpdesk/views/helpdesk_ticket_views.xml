@@ -13,23 +13,114 @@
             <field name="arch" type="xml">
                 <list
                     decoration-muted="state == 'cancelled'"
-                    decoration-success="state == 'resolved'">
-
+                    decoration-success="state == 'resolved'"
+                    sample="1"
+                    limit="10"
+                >
                     <field name="name"/>
                     <field name="requester_id"/>
                     <field name="technician_id"/>
-                    <field name="priority" widget="badge"/>
+                    <field 
+                        name="priority" 
+                        widget="priority"
+                    />
 
                     <field
                         name="state"
                         widget="badge"
                         decoration-info="state == 'in_progress'"
-                        decoration-warning="state == 'pending'"
+                        decoration-warning="state in ['assigned', 'pending']"
+                        decoration-danger="state == 'cancelled'"
+                        decoration-success="state == 'resolved'"
                     />
 
-                    <field name="deadline"/>
-                    <field name="total_time" widget="float_time" sum="Total heures"/>
+                    <field name="is_overdue" invisible="1"/>
+                    <field 
+                        name="deadline"
+                        decoration-danger="is_overdue"
+                    />
+
+                    <field
+                        name="total_time"
+                        widget="float_time"
+                        sum="Total heures"
+                    />
                 </list>
+            </field>
+        </record>
+
+
+        <!-- =====================================================
+             VUE KANBAN
+             ===================================================== -->
+
+        <record id="view_helpdesk_ticket_kanban" model="ir.ui.view">
+            <field name="name">helpdesk.ticket.kanban</field>
+            <field name="model">helpdesk.ticket</field>
+
+            <field name="arch" type="xml">
+                <kanban
+                    default_group_by="state"
+                    js_class="helpdesk_kanban"
+                    records_draggable="true"
+                    quick_create="false"
+                >
+                    <field name="name"/>
+                    <field name="reference"/>
+                    <field name="requester_id"/>
+                    <field name="technician_id"/>
+                    <field name="is_overdue" invisible="1"/>
+                    <field name="deadline"/>
+                    <field name="priority"/>
+                    <field name="state"/>
+                    <field name="total_time"/>
+
+                    <templates>
+                        <t t-name="card">
+                            <div t-attf-class="border-start border-4 ps-3 #{
+                                record.priority.raw_value == '3' ? 'border-danger' :
+                                record.priority.raw_value == '2' ? 'border-warning' :
+                                record.priority.raw_value == '1' ? 'border-primary' :
+                                'border-secondary'}">
+
+                                <!-- En-tête : référence + priorité -->
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small fw-bold text-muted text-uppercase">
+                                        <field name="reference"/>
+                                    </span>
+                                    <field name="priority" widget="priority"/>
+                                </div>
+
+                                <!-- Titre -->
+                                <div class="fw-bold fs-5 mt-1 lh-sm">
+                                    <field name="name"/>
+                                </div>
+
+                                <!-- Demandeur -->
+                                <div class="small text-muted mt-2">
+                                    <i class="fa fa-user-o me-1" title="Demandeur"/>
+                                    <field name="requester_id"/>
+                                </div>
+
+                                <!-- Pied : pastilles + avatar du technicien -->
+                                <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-3">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="d-flex align-items-center badge rounded-pill text-bg-light border">
+                                            <i class="fa fa-hourglass-half me-1" title="Temps total"/>
+                                            <field name="total_time" widget="float_time"/>
+                                        </span>
+                                        <span t-attf-class="badge rounded-pill border #{record.is_overdue.raw_value ? 'text-bg-danger' : 'text-bg-light'}">
+                                            <i class="fa fa-calendar-o me-1"  title="Échéance"/>
+                                            <field name="deadline"/>
+                                        </span>
+                                    </div>
+
+                                    <field name="technician_id" widget="many2one_avatar_user"/>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
             </field>
         </record>
 
@@ -53,8 +144,15 @@
                         name="is_requester"
                         invisible="1"
                     />
-                    <field name="is_assigned_technician" invisible="1"/>
-                    <field name="is_manager" invisible="1"/>
+                    <field 
+                        name="is_assigned_technician" 
+                        invisible="1"
+                        />
+                    <field 
+                        name="is_manager" 
+                        invisible="1"
+                    />
+                    <field name="feedback_ids" invisible="1"/>
 
                     <header>
                         <button
@@ -117,6 +215,14 @@
                             groups="bayz_helpdesk.group_helpdesk_manager"
                         />
 
+                        <button
+                            name="action_submit_feedback"
+                            string="Donner mon avis"
+                            type="object"
+                            invisible="state != 'closed' or not is_requester or feedback_ids"
+                            groups="bayz_helpdesk.group_helpdesk_user"
+                        />
+
                         <field
                             name="state"
                             widget="statusbar"
@@ -125,7 +231,11 @@
                     </header>
 
                     <sheet>
-                        <div class="oe_title">
+                        <div class="oe_title mb-4">
+                            <h4>
+                                <field name="reference" readonly="1"/>
+                            </h4>
+
                             <h1>
                                 <field
                                     name="name"
@@ -145,12 +255,12 @@
                                 <field
                                     name="technician_id"
                                     domain="[('id', 'in', technician_domain_ids)]"
-                                    readonly="not is_manager or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
+                                    readonly="not category_id or not is_manager or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
 
                                 <field
                                     name="category_id"
-                                    readonly="(not is_manager and not is_requester) or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
+                                    readonly="(not is_manager and not is_requester) or not name or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
                             </group>
 
@@ -158,7 +268,7 @@
                                 <field
                                     name="priority"
                                     widget="priority"
-                                    readonly="not is_manager or state in ['in_progress', 'resolved', 'closed', 'cancelled']"
+                                    readonly="not is_manager or not name or not category_id or state in ['in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
 
                                 <field
@@ -193,6 +303,21 @@
                                         <field name="end_datetime"/>
                                         <field name="duration" 
                                             widget="float_time" sum="Total"/>
+                                    </list>
+                                </field>
+                            </page>
+
+                            <page
+                                string="Évaluation"
+                                name="feedback"
+                                groups="bayz_helpdesk.group_helpdesk_user"
+                            >
+                                <field name="feedback_ids" readonly="1">
+                                    <list create="false" delete="false" edit="false">
+                                        <field name="requester_id"/>
+                                        <field name="rating"/>
+                                        <field name="comment"/>
+                                        <field name="create_date"/>
                                     </list>
                                 </field>
                             </page>
@@ -243,17 +368,24 @@
                     <filter
                         name="in_progress"
                         string="En cours"
-                        domain="[('state', 'in', [
-                            'new',
-                            'assigned',
-                            'in_progress',
-                            'pending'
-                        ])]"
+                        domain="[('state', '=', 'in_progress')]"
+                    />
+
+                    <filter
+                        name="deadline_expired"
+                        string="Délai passé"
+                        domain="[('is_overdue', '=', True)]"
                     />
 
                     <separator/>
 
                     <group>
+                        <filter
+                                name="group_by_technician"
+                                string="Technicien"
+                                context="{'group_by': 'technician_id'}"
+                            />
+                        
                         <filter
                             name="group_by_category"
                             string="Catégorie"
@@ -271,7 +403,14 @@
                             string="Priorité"
                             context="{'group_by': 'priority'}"
                         />
+
+                        <filter
+                                name="group_by_month"
+                                string="Mois"
+                                context="{'group_by': 'create_date:month'}"
+                            />
                     </group>
+
                 </search>
             </field>
         </record>
@@ -282,9 +421,12 @@
              ===================================================== -->
 
         <record id="action_helpdesk_ticket" model="ir.actions.act_window">
-            <field name="name">Tickets</field>
+            <field name="name">Tous les tickets</field>
             <field name="res_model">helpdesk.ticket</field>
-            <field name="view_mode">list,form</field>
+            <field name="view_mode">list,kanban,form</field>
+            <field name="group_ids" eval="[
+                Command.link(ref('bayz_helpdesk.group_helpdesk_manager')),
+            ]"/>
 
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
@@ -293,24 +435,57 @@
             </field>
         </record>
 
+        <record id="action_helpdesk_ticket_technician" model="ir.actions.act_window">
+            <field name="name">Tickets Assignés</field>
+            <field name="res_model">helpdesk.ticket</field>
+            <field name="view_mode">kanban,list,form</field>
+            <field name="group_ids" eval="[
+                Command.link(ref('bayz_helpdesk.group_helpdesk_technician')),
+            ]"/>
+            <field name="domain">[('technician_id', '=', uid)]</field>
+        </record>
+
+        <!-- Pour les autres utilisateurs : liste et formulaire seulement -->
+        <record id="action_helpdesk_ticket_requester" model="ir.actions.act_window">
+            <field name="name">Mes tickets</field>
+            <field name="res_model">helpdesk.ticket</field>
+            <field name="view_mode">list,form</field>
+            <field name="domain">[('requester_id', '=', uid)]</field>
+            <field name="group_ids" eval="[
+                Command.link(ref('bayz_helpdesk.group_helpdesk_user'))
+            ]"/>
+        </record>
+
 
         <!-- =====================================================
              MENUS
              ===================================================== -->
 
         <menuitem
-            id="menu_helpdesk_root"
-            name="HelpDesk"
+            id="menu_helpdesk_ticket_manager"
+            name="Tous les tickets"
+            parent="menu_helpdesk_ticket_master"
+            action="action_helpdesk_ticket"
             sequence="10"
-            web_icon="bayz_helpdesk,static/description/icon.png"
+            groups="bayz_helpdesk.group_helpdesk_manager"
         />
 
         <menuitem
-            id="menu_helpdesk_ticket"
-            name="Tickets"
-            parent="menu_helpdesk_root"
-            action="action_helpdesk_ticket"
-            sequence="10"
+            id="menu_helpdesk_ticket_technician"
+            name="Tickets Assignés"
+            parent="menu_helpdesk_ticket_master"
+            action="action_helpdesk_ticket_technician"
+            sequence="11"
+            groups="bayz_helpdesk.group_helpdesk_technician"
+        />
+
+        <menuitem
+            id="menu_helpdesk_ticket_requester"
+            name="Mes tickets"
+            parent="menu_helpdesk_ticket_master"
+            action="action_helpdesk_ticket_requester"
+            groups="bayz_helpdesk.group_helpdesk_user"
+            sequence="12"
         />
 
     </data>
