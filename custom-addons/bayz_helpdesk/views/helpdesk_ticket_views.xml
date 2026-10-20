@@ -246,12 +246,12 @@
                                 <field
                                     name="technician_id"
                                     domain="[('id', 'in', technician_domain_ids)]"
-                                    readonly="not is_manager or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
+                                    readonly="not category_id or not is_manager or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
 
                                 <field
                                     name="category_id"
-                                    readonly="(not is_manager and not is_requester) or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
+                                    readonly="(not is_manager and not is_requester) or not name or state in ['assigned', 'in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
                             </group>
 
@@ -259,7 +259,7 @@
                                 <field
                                     name="priority"
                                     widget="priority"
-                                    readonly="not is_manager or state in ['in_progress', 'resolved', 'closed', 'cancelled']"
+                                    readonly="not is_manager or not name or not category_id or state in ['in_progress', 'resolved', 'closed', 'cancelled']"
                                 />
 
                                 <field
