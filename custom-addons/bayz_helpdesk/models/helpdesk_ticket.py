@@ -1,7 +1,10 @@
+import logging
 from datetime import timedelta
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 
 class HelpdeskTicket(models.Model):
@@ -254,10 +257,22 @@ class HelpdeskTicket(models.Model):
 
     @api.depends("category_id", "total_time")
     def _compute_time_by_category(self):
+        category_ids = self.mapped("category_id").ids
+        totals = {}
+        if category_ids:
+            groups = self.env["helpdesk.ticket"].sudo()._read_group(
+                domain=[("category_id", "in", category_ids)],
+                groupby=["category_id"],
+                aggregates=["total_time:sum"],
+            )
+            totals = {cat.id: total for cat, total in groups if cat}
+
         for ticket in self:
-            # Filtrer sur tout le recordset 'self'
-            matching = self.filtered(lambda t: t.category_id == ticket.category_id)
-            ticket.time_by_category = sum(matching.mapped("total_time"))
+            ticket.time_by_category = (
+                totals.get(ticket.category_id.id, 0.0)
+                if ticket.category_id
+                else 0.0
+            )
 
     # Verifier les tickets dont la deadline est dépassé
     @api.depends('state', 'deadline')
@@ -337,11 +352,13 @@ class HelpdeskTicket(models.Model):
 
         for ticket in self:
             if not ticket.requester_id.partner_id.email:
-                raise UserError(
-                    _("Le demandeur du ticket « %(ticket)s » n'a pas d'adresse e-mail.")
-                    % {"ticket": ticket.name}
+                _logger.info(
+                    "Notification ignorée pour le ticket %s : le demandeur %s n'a pas d'adresse e-mail.",
+                    ticket.reference,
+                    ticket.requester_id.name,
                 )
-            
+                continue
+
             template.send_mail(
                 ticket.id,
                 force_send=True,
@@ -385,6 +402,9 @@ class HelpdeskTicket(models.Model):
                 raise UserError(
                     _("Vous n'avez pas les droits nécessaires pour effectuer cette transition.")
                 )
+
+            if new_state == "assigned" and not ticket.technician_id:
+                raise UserError(_("Veuillez sélectionner un Technicien."))
 
     # Methode permetante de modifier le state du ticket avec le nouveau state "new_state"
     def _change_state(self, new_state):
@@ -562,6 +582,13 @@ class HelpdeskTicket(models.Model):
             },
         }
         
+        tickets_to_assign = self.env["helpdesk.ticket"]
+        if "technician_id" in vals and vals.get("technician_id"):
+            new_technician_id = vals.get("technician_id")
+            tickets_to_assign = self.filtered(
+                lambda t: t.technician_id.id != new_technician_id
+            )
+
         # Vérification pour chaque ticket
         for ticket in self:
             # L'utilisateur est-il le demandeur de ce ticket ?
@@ -604,4 +631,7 @@ class HelpdeskTicket(models.Model):
                         self._change_state('assigned')
         
         # Écriture réelle
-        return super().write(vals)
+        res = super().write(vals)
+        if tickets_to_assign:
+            tickets_to_assign._change_state("assigned")
+        return res

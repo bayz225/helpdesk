@@ -1,5 +1,5 @@
 from odoo import _, models, fields, api
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 import re
 import unicodedata
 
@@ -69,6 +69,16 @@ class HelpdeskCategory(models.Model):
         for category in self:
             category.is_manager = self.env.user.has_group('bayz_helpdesk.group_helpdesk_manager')
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        if not self.env.su and not self.env.user.has_group(
+            "bayz_helpdesk.group_helpdesk_manager"
+        ):
+            raise AccessError(
+                _("Seul le responsable peut créer une catégorie.")
+            )
+        return super().create(vals_list)
+
     def write(self, vals):
         is_manager = self.env.user.has_group(
             "bayz_helpdesk.group_helpdesk_manager"
@@ -80,3 +90,12 @@ class HelpdeskCategory(models.Model):
             )
 
         return super().write(vals)
+
+    def unlink(self):
+        if not self.env.su and not self.env.user.has_group(
+            "bayz_helpdesk.group_helpdesk_manager"
+        ):
+            raise AccessError(
+                _("Seul le responsable peut supprimer une catégorie.")
+            )
+        return super().unlink()

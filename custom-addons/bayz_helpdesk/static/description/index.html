@@ -1,0 +1,109 @@
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan" style="color:#714B67;">HelpDesk Bayz</h2>
+        <h3 class="oe_slogan">Gestion professionnelle des tickets de support internes pour Odoo 19</h3>
+        <div class="oe_span12">
+            <p class="oe_mt32 text-center">
+                <strong>HelpDesk Bayz</strong> centralise le suivi des demandes de support internes,
+                l'affectation aux techniciens, le respect des délais SLA, la saisie automatique des
+                feuilles de temps et l'évaluation de la satisfaction des demandeurs.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan" style="color:#714B67;">Fonctionnalités principales</h2>
+
+        <div class="oe_span6">
+            <div class="oe_demo oe_picture oe_screenshot" style="padding:16px; border:1px solid #dee2e6; border-radius:6px; background:#fff;">
+                <h4>Gestion complète des tickets</h4>
+                <ul>
+                    <li>Numérotation automatique au format <code>HD/AAAA/00001</code>.</li>
+                    <li>Workflow strict : <em>Nouveau, Assigné, En cours, En attente, Résolu, Fermé, Réouvert, Annulé</em>.</li>
+                    <li>Vues Liste, Formulaire et Kanban interactif avec glisser-déposer contrôlé par les droits.</li>
+                    <li>Chatter Odoo intégré pour l'historique des échanges et activités.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="oe_span6">
+            <div class="oe_demo oe_picture oe_screenshot" style="padding:16px; border:1px solid #dee2e6; border-radius:6px; background:#fff;">
+                <h4>SLA &amp; Feuilles de temps automatiques</h4>
+                <ul>
+                    <li>Calcul automatique de l'échéance selon la priorité :
+                        <strong>Faible</strong> (7 j), <strong>Moyenne</strong> (3 j),
+                        <strong>Haute</strong> (24 h), <strong>Urgent</strong> (6 h).
+                    </li>
+                    <li>Recalcul du délai à la réouverture et filtre des tickets en retard.</li>
+                    <li>Démarrage et arrêt automatiques des sessions de temps lors du passage vers/hors <em>En cours</em>.</li>
+                    <li>Vues Pivot &amp; Graphique sur les temps et export Excel filtrable par période, technicien et catégorie.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan" style="color:#714B67;">Catégories, Notifications &amp; Évaluations</h2>
+        <div class="oe_span12">
+            <ul>
+                <li><strong>Catégories</strong> : unicité normalisée (insensible à la casse, aux accents et aux espaces superflus) et compteur de tickets associés.</li>
+                <li><strong>Notifications e-mail</strong> : envoi automatique au demandeur lors des changements d'état (ignoré silencieusement si aucune adresse e-mail n'est renseignée).</li>
+                <li><strong>Évaluation de satisfaction</strong> : après clôture, le demandeur peut soumettre une note unique (1 à 5) accompagnée d'un commentaire facultatif.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan" style="color:#714B67;">Rôles et Sécurité</h2>
+        <div class="oe_span12">
+            <p>Les groupes sont hiérarchiques (<em>Responsable</em> inclut <em>Technicien</em>, qui inclut <em>Utilisateur</em>) :</p>
+            <table class="table table-bordered" style="background:#fff;">
+                <thead>
+                    <tr>
+                        <th>Groupe</th>
+                        <th>Accès aux tickets</th>
+                        <th>Accès complémentaires</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>HelpDesk : Utilisateur</strong></td>
+                        <td>Créer, lire et modifier ses propres tickets (sans suppression).</td>
+                        <td>Lecture des catégories et des feuilles de temps de ses tickets ; évaluation de ses tickets fermés.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HelpDesk : Technicien</strong></td>
+                        <td>Accès aux tickets demandés ou qui lui sont assignés.</td>
+                        <td>Démarrage, mise en attente, reprise et résolution de ses tickets ; consultation des évaluations associées.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HelpDesk : Responsable</strong></td>
+                        <td>Accès complet (CRUD) à tous les tickets.</td>
+                        <td>Assignation, fermeture, réouverture, annulation, gestion complète des catégories, reporting et export Excel.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <h2 class="oe_slogan" style="color:#714B67;">Prérequis &amp; Installation</h2>
+        <div class="oe_span12">
+            <ul>
+                <li><strong>Version Odoo</strong> : 19.0</li>
+                <li><strong>Dépendances Odoo</strong> : <code>base</code>, <code>mail</code></li>
+                <li><strong>Dépendance Python</strong> : <code>openpyxl</code> (nécessaire à l'export Excel)</li>
+                <li><strong>Configuration</strong> : attribuer les groupes HelpDesk aux utilisateurs depuis <em>Paramètres → Utilisateurs</em>.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+

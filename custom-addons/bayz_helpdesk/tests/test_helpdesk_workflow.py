@@ -95,3 +95,34 @@ class TestHelpdeskWorkflow(HelpdeskTestMixin, TransactionCase):
         visible_tickets = self.ticket_model.with_user(first_requester).search([])
 
         self.assertEqual(visible_tickets, first_ticket)
+
+    def test_kanban_assign_without_technician_is_rejected(self):
+        ticket = self.create_ticket()
+
+        with self.assertRaises(UserError):
+            ticket.with_user(self.manager).action_kanban_change_state("assigned")
+
+    def test_state_notification_skips_requester_without_email(self):
+        requester_no_email = self.create_user(
+            "No email requester", ["bayz_helpdesk.group_helpdesk_user"]
+        )
+        requester_no_email.partner_id.email = False
+        ticket = self.create_ticket(requester=requester_no_email)
+
+        ticket.with_user(self.manager).write({"technician_id": self.technician.id})
+
+        self.assertEqual(ticket.state, "assigned")
+
+    def test_batch_assignment_updates_all_tickets_once(self):
+        first_ticket = self.create_ticket(name="Batch 1")
+        second_ticket = self.create_ticket(name="Batch 2")
+
+        with patch.object(HelpdeskTicket, "_send_state_notification"):
+            (first_ticket | second_ticket).with_user(self.manager).write({
+                "technician_id": self.technician.id,
+            })
+
+        self.assertEqual(first_ticket.state, "assigned")
+        self.assertEqual(second_ticket.state, "assigned")
+        self.assertEqual(first_ticket.technician_id, self.technician)
+        self.assertEqual(second_ticket.technician_id, self.technician)
