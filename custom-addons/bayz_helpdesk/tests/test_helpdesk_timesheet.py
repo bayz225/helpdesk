@@ -76,6 +76,29 @@ class TestHelpdeskTimesheet(HelpdeskTestMixin, TransactionCase):
         self.assertAlmostEqual(ticket.times_by_technician, 3.0)
         self.assertAlmostEqual(ticket.time_by_category, 3.0)
 
+    def test_time_by_category_aggregates_all_tickets_in_category(self):
+        first_ticket = self.create_ticket(
+            name="Cat ticket 1",
+            category_id=self.category.id,
+        )
+        second_ticket = self.create_ticket(
+            name="Cat ticket 2",
+            category_id=self.category.id,
+        )
+        self._create_timesheet(
+            first_ticket,
+            datetime(2025, 1, 1, 9, 0),
+            datetime(2025, 1, 1, 10, 0),
+        )
+        self._create_timesheet(
+            second_ticket,
+            datetime(2025, 1, 1, 11, 0),
+            datetime(2025, 1, 1, 13, 0),
+        )
+        first_ticket.invalidate_recordset(["time_by_category"])
+
+        self.assertAlmostEqual(first_ticket.time_by_category, 3.0)
+
     def test_technician_statistics_group_by_ticket(self):
         first_ticket = self.create_ticket(category_id=self.category.id)
         second_ticket = self.create_ticket(category_id=self.category.id)

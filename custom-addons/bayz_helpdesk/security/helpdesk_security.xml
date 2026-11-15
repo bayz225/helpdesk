@@ -166,6 +166,42 @@
                    eval="[(4, ref('bayz_helpdesk.group_helpdesk_manager'))]"/>
             <field name="domain_force">[(1, '=', 1)]</field>
         </record>
+
+        <!-- =====================================================
+             RÈGLES D'ACCÈS AUX CATÉGORIES
+             ===================================================== -->
+
+        <!-- Utilisateur / Technicien :
+             lecture seule sur les catégories -->
+        <record id="rule_helpdesk_category_user" model="ir.rule">
+            <field name="name">
+                HelpDesk : Lecture des catégories
+            </field>
+            <field name="model_id" ref="model_helpdesk_category"/>
+            <field name="groups"
+                   eval="[(4, ref('bayz_helpdesk.group_helpdesk_user'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_unlink" eval="False"/>
+        </record>
+
+        <!-- Responsable :
+             accès complet aux catégories -->
+        <record id="rule_helpdesk_category_manager" model="ir.rule">
+            <field name="name">
+                HelpDesk : Gestion des catégories du responsable
+            </field>
+            <field name="model_id" ref="model_helpdesk_category"/>
+            <field name="groups"
+                   eval="[(4, ref('bayz_helpdesk.group_helpdesk_manager'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_unlink" eval="True"/>
+        </record>
         
     </data>
 </odoo>
