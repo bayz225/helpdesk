@@ -623,6 +623,12 @@ class HelpdeskTicket(models.Model):
                         _("Le champ « %(field)s » ne peut pas être modifié dans l'état actuel du ticket.")
                         % {"field": field_name}
                     )
+                    
+                if field_name == "technician_id":
+                    new_technician_id = vals.get("technician_id")
+                    
+                    if ticket.technician_id.id != new_technician_id:
+                        self._change_state('assigned')
         
         # Écriture réelle
         res = super().write(vals)
