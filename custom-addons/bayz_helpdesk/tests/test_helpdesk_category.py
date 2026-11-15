@@ -1,4 +1,4 @@
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests.common import TransactionCase
 
 from .common import HelpdeskTestMixin
@@ -33,3 +33,25 @@ class TestHelpdeskCategory(HelpdeskTestMixin, TransactionCase):
 
         ticket.unlink()
         self.assertEqual(category.count_tickets, 0)
+
+    def test_non_manager_cannot_create_or_unlink_category(self):
+        standard_user = self.create_user(
+            "Standard user", ["bayz_helpdesk.group_helpdesk_user"]
+        )
+        manager = self.create_user(
+            "Category admin", ["bayz_helpdesk.group_helpdesk_manager"]
+        )
+        category = self.env["helpdesk.category"].with_user(manager).create({
+            "name": "Protected category",
+        })
+
+        with self.assertRaises(AccessError):
+            self.env["helpdesk.category"].with_user(standard_user).create({
+                "name": "Unauthorized",
+            })
+
+        with self.assertRaises(AccessError):
+            category.with_user(standard_user).unlink()
+
+        category.with_user(manager).unlink()
+        self.assertFalse(category.exists())
